@@ -8,7 +8,7 @@ import re
 import logging
 
 #hook = Webhook("https://discord.com/api/webhooks/805752499293650945/yhXlvBIRuZufc4qKcalDzj-WzgWeLkaOxsqgWhNLKtv2KUOgKBwz6yHbFglkIgzZLzW0")
-hook= Webhook("https://discord.com/api/webhooks/809051950389264394/CbfQ7MB1m1v7JAB68hZJzF0hqmzPOTZxnLqPcJRyt0-mvvrTCgpYA_h8kY_moadkag5X")
+hook= Webhook("https://discord.com/api/webhooks/836258879519195166/o4HsziR7ZQ1tZD7aopXkn-VFp68aUsY91Lijl1QhnAJNh0rdMIp_6xOtaTBAYXr6Gzx6")
 #image= os.path.join(os.path.expanduser('~'), 'tmp/image', '03-02-2021_09_00_00_quad2_screenshot.jpg')
 schedule_json_file = os.path.join(os.path.expanduser('~'), 'tmp', 'schedule.json')
 state_json_file =os.path.join(os.path.expanduser('~'), 'tmp', 'state.json')
@@ -48,7 +48,7 @@ def notifications():
     
     # battery percentage
     battery_percentage=int(list_state['battery']['percentage']*100)
-    # Color for NORMAL MSG State
+    # Color for autopilot NORMAL MSG State
     color_msg=0x5CDBF0
     
     # Warning case if battery value < 0.4 msg for battery status switch to warning
@@ -60,11 +60,12 @@ def notifications():
         robot_state='**Failed**'
         color_msg=0xF04747
     
+    #this variable is for checking the state switched to Docking or not
+    docking_state=False
     
-      
     for event in list_schedule['scheduleData']:
-            #this variable is for checking the state switched to Docking or not
-            docking_state=False
+            while (list_state['robot_state'].lower() == 'docking'):
+                docking_state=True 
             #Get the dtae and time from local to check with event in schedule.json file
             startDateNow= datetime.datetime.today().strftime('%Y-%m-%d')
             startTimeNow= datetime.datetime.now().time().strftime("%H:%M")
@@ -84,12 +85,13 @@ def notifications():
                     event_nextTime=data_next[0][11:16]
                     event_nextDate=data_next[0][0:10]
 
-            print(event_nextDate)
-            print(event_nextTime)        
+            #print(event_nextDate)
+            #print(event_nextTime) 
+            print(docking_state)       
             # AUTOPILOT MSG
             if(startDateNow == event['StartTime'][0:10] and startTimeNow == event['StartTime'][11:16]):
 
-                if event['Subject'] == 'AUTOPILOT':
+                if event['Subject'].upper() == 'AUTOPILOT':
                     
                     
                     notification = Embed(
@@ -113,55 +115,45 @@ def notifications():
                 if(list_state['robot_state'].lower() == 'docking'):
                         
                         robot_state='**OK**'
-                        notification = Embed(
+                        color_msg=0x5CDBF0
+                        docking_state=True 
+                else :
+                        robot_state='**Failed**'
+                        color_msg=0xF04747
+                notification = Embed(
                                 description=robot_state+' : Next start AUTOPILOT NOW'+'\n'+
                                 robot_state+' : ROBOT STATUS changed to '+list_state['robot_state']+'\n'+
                                 battery_state+' : Battery status '+str(battery_percentage)+' % minimum 40%'+'\n'+
                                 'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
                                 'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
-                                color=0x5CDBF0
+                                color=color_msg
                                     )
 
-                        notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow)
+                notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow)
 
-                        hook.send(embed=notification)
-                        logging.info('DOCKING Notification Sent !')
+                hook.send(embed=notification)
+                logging.info('DOCKING Notification Sent !')
+               
+           
                        
              
             #DOCKED MSG
-            while (docking_state == True):
-                    print(docking_state)
-                    if (list_state['robot_state'].lower() == 'docking'):
-                                 break
-                    elif (list_state['robot_state'].lower() == 'docked'):
-                        docking_state = False
-                        robot_state='**OK**'
-                        notification = Embed(
+            #To verify if the date and time for an event ae in the same date or for the case of midnight to take the state docked 
+            if (docking_state and list_state['robot_state'].lower() == 'docked'): #and ((startDateNow==event_nextDate and startTimeNow < event_nextTime) or (startDateNow < event_nextDate))) :
+                    
+                notification = Embed(
                                     description='Next start AUTOPILOT '+event_nextDate+' '+event_nextTime+'\n'+
-                                    robot_state+' : ROBOT STATUS switched to '+list_state['robot_state']+'\n'+
+                                    '**OK**'+' : ROBOT STATUS switched to '+list_state['robot_state']+'\n'+
                                     battery_state+' : Battery status '+str(battery_percentage)+' % minimum 40%'+'\n'+
                                     'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
                                     'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
                                     color=0x5CDBF0
                                     )
-                        notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow)
-                        hook.send(embed=notification)
-                        logging.info('DOCKED Notification Sent !')
-                        break
-                    else :
-                        docking_state = False
-                        notification = Embed(
-                                description='Next start AUTOPILOT '+event_nextDate+' '+event_nextTime+'\n'+
-                                '**Failed**'+' : ROBOT STATUS switched to '+list_state['robot_state']+'\n'+
-                                battery_state+' : Battery status '+str(battery_percentage)+' % minimum 40%'+'\n'+
-                                'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
-                                'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
-                                color=0xF04747
-                                )
-                        notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow)
-                        hook.send(embed=notification)
-                        logging.info(list_state['robot_state']+' Notification Sent !')
-                        break  
+                notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow)
+                hook.send(embed=notification)
+                docking_state=False
+                logging.info('DOCKED Notification Sent !')
+                       
                 
                     
             
