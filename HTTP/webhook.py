@@ -9,17 +9,7 @@ import configuration as cfg
 from schedule import every, repeat, run_pending
 #This array will save the different status of robot this will help to compare between the new status and the old one
 robot_status_list=[]
-config={ "Settings": {
-    "temperature": {
-      "Max": 30,
-      "Min": 15,
-    },
-   "humidity": {
-      "Max": 30,
-      "Min": 15,
-    },
-    "AlertDiskValue":0.2
-  }}
+
 
 #@repeat is a decorator provide from schedule. In our case notificationsHook will be ran every 30 seconds
 @repeat(every(30).seconds)
