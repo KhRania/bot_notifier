@@ -4,11 +4,11 @@ from requests.exceptions import HTTPError
 from dhooks import Webhook, Embed
 import datetime
 import time
+import configuration as cfg
 #schedule the run of the function 
 from schedule import every, repeat, run_pending
 #This array will save the different status of robot this will help to compare between the new status and the old one
 robot_status_list=[]
-
 config={ "Settings": {
     "temperature": {
       "Max": 30,
@@ -20,16 +20,17 @@ config={ "Settings": {
     },
     "AlertDiskValue":0.2
   }}
+
 #@repeat is a decorator provide from schedule. In our case notificationsHook will be ran every 30 seconds
 @repeat(every(30).seconds)
 def notificationsHook():
     #set robot_status_list as a global array
     global robot_status_list
     #WebHokk URL Provided By Discord (this url serve to communicate with Discord App)
-    #hook = Webhook("https://discord.com/api/webhooks/805752499293650945/yhXlvBIRuZufc4qKcalDzj-WzgWeLkaOxsqgWhNLKtv2KUOgKBwz6yHbFglkIgzZLzW0")
-    hook= Webhook("https://discord.com/api/webhooks/836258879519195166/o4HsziR7ZQ1tZD7aopXkn-VFp68aUsY91Lijl1QhnAJNh0rdMIp_6xOtaTBAYXr6Gzx6")
+    hook = Webhook("https://discord.com/api/webhooks/836258879519195166/o4HsziR7ZQ1tZD7aopXkn-VFp68aUsY91Lijl1QhnAJNh0rdMIp_6xOtaTBAYXr6Gzx6")
+    #hook= Webhook(cfg.urls["webhookUrl"])
     #urls contains the url of state from REST Server
-    url= 'http://127.0.0.1:40054/state'
+    url= cfg.urls["stateUrl"]
     #The result of this test will be stored in scheduleRequest & stateRequest to do the treatment afterwards
     stateRequest=False
     
@@ -91,30 +92,30 @@ def notificationsHook():
             battery_msg=' minimum 40%'
 
         # Warning case if free_disk_percentage < 20 % msg for battery status switch to warning
-        if free_disk_percentage < round(config['Settings']['AlertDiskValue']*100,1):
+        if free_disk_percentage < round(cfg.config['Settings']['AlertDiskValue']*100,1):
             free_disk_percentage_state='**WARNING**'
             color_msg=0xFF8800
             free_disk_msg=' minimum 20%'
 
         #Warning Temperature 
-        if temperature_value <= config['Settings']['temperature']['Min']:
+        if temperature_value <= cfg.config['Settings']['temperature']['Min']:
             temperature_state='**WARNING**'
             color_msg=0xFF8800
-            temperature_msg='minimum '+str(config['Settings']['temperature']['Min'])+' °C'
+            temperature_msg='minimum '+str(cfg.config['Settings']['temperature']['Min'])+' °C'
         elif temperature_value >= config['Settings']['temperature']['Max']:
             temperature_state='**WARNING**'
             color_msg=0xFF8800
-            temperature_msg='maximum '+str(config['Settings']['temperature']['Max'])+' °C'
+            temperature_msg='maximum '+str(cfg.config['Settings']['temperature']['Max'])+' °C'
 
         #Warning Humidity
-        if humidity_value <= config['Settings']['humidity']['Min']:
+        if humidity_value <= cfg.config['Settings']['humidity']['Min']:
             humidity_state='**WARNING**'
             color_msg=0xFF8800
-            humidity_msg='minimum '+str(config['Settings']['humidity']['Min'])+' %'
-        elif humidity_value >= config['Settings']['humidity']['Max']:
+            humidity_msg='minimum '+str(cfg.config['Settings']['humidity']['Min'])+' %'
+        elif humidity_value >= cfg.config['Settings']['humidity']['Max']:
             humidity_state='**WARNING**'
             color_msg=0xFF8800
-            humidity_msg='maximum '+str(config['Settings']['humidity']['Max'])+' %'
+            humidity_msg='maximum '+str(cfg.config['Settings']['humidity']['Max'])+' %'
 
         #Get the date and time from local to check with event in get request of schedule
         startDateNow= datetime.datetime.today().strftime('%Y-%m-%d')
