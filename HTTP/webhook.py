@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+from errno import ENETUNREACH
 import requests
 from requests.exceptions import HTTPError
 #dhooks is a library enables interact with discord webhooks  
@@ -17,12 +20,11 @@ def notificationsHook():
     #set robot_status_list as a global array
     global robot_status_list
     #WebHokk URL Provided By Discord (this url serve to communicate with Discord App)
-    hook = Webhook("https://discord.com/api/webhooks/836258879519195166/o4HsziR7ZQ1tZD7aopXkn-VFp68aUsY91Lijl1QhnAJNh0rdMIp_6xOtaTBAYXr6Gzx6")
-    #hook= Webhook(cfg.urls["webhookUrl"])
+    hook= Webhook(cfg.urls["webhookUrl"])
     #urls contains the url of state from REST Server
-    url= cfg.urls["stateUrl"]
-    #The result of this test will be stored in scheduleRequest & stateRequest to do the treatment afterwards
-    stateRequest=False
+    url=cfg.urls["stateUrl"]
+    #The result of this test will be stored in scheduleRequest & state_request to do the treatment afterwards
+    state_request=False
     
     #Test if the connection to /state is available
     if url :
@@ -37,23 +39,25 @@ def notificationsHook():
             print(f'Other error occurred: {err}')  # Python 3.6
         #No Exception raised => Connection to the Rest Server with success    
         else:
+            
             print('Success Connection To Rest Server!')
-            stateRequest=True
-    
-    if (stateRequest) :     
+            state_request=True
+            schedule_request=True
+
+    if (state_request) :     
         clock_image='https://img.icons8.com/doodle/48/000000/alarm-clock.png'
         # extracting state data in json format
-        list_state=requests.get(url).json()
+        list_state=requests.get(cfg.urls["stateUrl"]).json()
         #State MSG
-        robot_state='**OK**'
-        humidity_state='**OK**'
-        temperature_state='**OK**'
-        battery_state='**OK**'
-        free_disk_percentage_state='**OK**'
+        robot_state=':white_check_mark:'
+        humidity_state=':white_check_mark:'
+        temperature_state=':white_check_mark:'
+        battery_state=':white_check_mark:'
+        free_disk_percentage_state=':white_check_mark:'
         #normal color msg blue
         color_msg=0x5CDBF0
         #Robot status
-        robot_status=list_state['robot_state']
+        robot_status=list_state['state']
         robot_status_list.append(robot_status)
         #Temperature Value
         temperature_value=list_state['sensors']['temperature']
@@ -68,42 +72,43 @@ def notificationsHook():
         #battery Message send with the notification is empty when battery_percentage is normal
         battery_msg=''
         #Free Disk Storage percentage
-        free_disk_percentage=round((float(list_state['storage_free'])/float(list_state['storage_total']))*100,1)
+        free_disk_percentage=round((float(list_state['storage']['free'])/float(list_state['storage']['total']))*100,1)
         #Total Disk Storage percentage
-        total_percentage=round(float(list_state['storage_total']),1)
+        total_percentage=round(float(list_state['storage']['total']),1)
         #free_disk Message send with the notification is empty when free_disk_percentage is normal
         free_disk_msg=''
         
        
         # Warning case if battery value < 0.4 msg for battery status switch to warning
         if list_state['battery']['percentage']<0.4:
-            battery_state='**WARNING**'
+            battery_state=':no_entry_sign:'
             color_msg=0xFF8800
             battery_msg=' minimum 40%'
 
         # Warning case if free_disk_percentage < 20 % msg for battery status switch to warning
         if free_disk_percentage < round(cfg.config['Settings']['AlertDiskValue']*100,1):
-            free_disk_percentage_state='**WARNING**'
+            free_disk_percentage_state=':no_entry_sign:'
             color_msg=0xFF8800
             free_disk_msg=' minimum 20%'
 
         #Warning Temperature 
         if temperature_value <= cfg.config['Settings']['temperature']['Min']:
-            temperature_state='**WARNING**'
+            temperature_state=':no_entry_sign:'
             color_msg=0xFF8800
             temperature_msg='minimum '+str(cfg.config['Settings']['temperature']['Min'])+' °C'
-        elif temperature_value >= config['Settings']['temperature']['Max']:
-            temperature_state='**WARNING**'
+          
+        elif temperature_value >= cfg.config['Settings']['temperature']['Max']:
+            temperature_state=':no_entry_sign:'
             color_msg=0xFF8800
             temperature_msg='maximum '+str(cfg.config['Settings']['temperature']['Max'])+' °C'
-
+            
         #Warning Humidity
         if humidity_value <= cfg.config['Settings']['humidity']['Min']:
-            humidity_state='**WARNING**'
+            humidity_state=':no_entry_sign:'
             color_msg=0xFF8800
             humidity_msg='minimum '+str(cfg.config['Settings']['humidity']['Min'])+' %'
         elif humidity_value >= cfg.config['Settings']['humidity']['Max']:
-            humidity_state='**WARNING**'
+            humidity_state=':no_entry_sign:'
             color_msg=0xFF8800
             humidity_msg='maximum '+str(cfg.config['Settings']['humidity']['Max'])+' %'
 
@@ -112,8 +117,8 @@ def notificationsHook():
         startTimeNow= datetime.datetime.now().time().strftime("%H:%M")
       
         # Test the Status if it FAILED the msg of th robot state is failed and the color is red 
-        if list_state['robot_state'].lower() == 'failed':
-                robot_state='**Failed**'
+        if list_state['state'].lower() == 'failure':
+                robot_state=':no_entry_sign:'
                 color_msg=0xF04747
         
         #test the length of the array to send the first notification     
@@ -122,10 +127,14 @@ def notificationsHook():
             notification = Embed(
 
                                     description=robot_state+' : ROBOT STATUS '+robot_status+'\n'+
-                                    battery_state+' : Battery status '+str(battery_percentage)+' % '+battery_msg+'\n'+
-                                    free_disk_percentage_state+' : Free Disk Storage '+str(free_disk_percentage)+' % '+free_disk_msg+'\n'+
-                                    temperature_state+' : Temperature '+str(temperature_value)+' °C '+temperature_msg+'\n'+
-                                    humidity_state+' : Hydrometry '+str(humidity_value)+' % '+humidity_msg,
+                                    '\n'+
+                                    battery_state+' : Battery status :battery: '+str(battery_percentage)+' % '+battery_msg+'\n'+
+                                    '\n'+
+                                    free_disk_percentage_state+' : Free Storage :cd: '+str(free_disk_percentage)+' % '+free_disk_msg+'\n'+
+                                    '\n'+
+                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+' °C '+temperature_msg+'\n'+
+                                    '\n'+
+                                    humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+' % '+humidity_msg,
                                     color=color_msg
                                     
                                     )
@@ -139,10 +148,14 @@ def notificationsHook():
             notification = Embed(
 
                                     description=robot_state+' : ROBOT STATUS '+robot_status+'\n'+
-                                    battery_state+' : Battery status '+str(battery_percentage)+' % '+battery_msg+'\n'+
-                                    free_disk_percentage_state+' : Free Disk Storage '+str(free_disk_percentage)+' % '+free_disk_msg+'\n'+
-                                    temperature_state+' : Temperature '+str(temperature_value)+' °C '+temperature_msg+'\n'+
-                                    humidity_state+' : Hydrometry '+str(humidity_value)+' % '+humidity_msg,
+                                   '\n'+
+                                    battery_state+' : Battery status :battery: '+str(battery_percentage)+' % '+battery_msg+'\n'+
+                                    '\n'+
+                                    free_disk_percentage_state+' : Free Storage :cd: '+str(free_disk_percentage)+' % '+free_disk_msg+'\n'+
+                                    '\n'+
+                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+' °C '+temperature_msg+'\n'+
+                                    '\n'+
+                                    humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+' % '+humidity_msg,
                                     color=color_msg
                                     
                                     )

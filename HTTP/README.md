@@ -38,7 +38,7 @@
 ## 5) Schedule  : 
     Schedule allows to run Python functions periodically. 
 <ul>
-<li>Install : pip install schedule</li>
+<li>Install : pip3 install schedule</li>
 <li>reference : https://pypi.org/project/schedule/</li>
 </ul>
 

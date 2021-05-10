@@ -1,15 +1,16 @@
 config={ "Settings": {
     "temperature": {
-      "Max": 30,
-      "Min": 15,
+      "Max": 30.0,
+      "Min": 15.0,
     },
    "humidity": {
-      "Max": 30,
-      "Min": 15,
+      "Max": 30.0,
+      "Min": 15.0,
     },
-    "AlertDiskValue":0.2
+    "AlertDiskValue":0.2,
+    "battery":0.2
   }}
 urls={
     "stateUrl":"http://127.0.0.1:40054/state",
-    "webhookUrl":"https://discord.com/api/webhooks/805752499293650945/yhXlvBIRuZufc4qKcalDzj-WzgWeLkaOxsqgWhNLKtv2KUOgKBwz6yHbFglkIgzZLzW0"
+    "webhookUrl":"https://discord.com/api/webhooks/836258879519195166/o4HsziR7ZQ1tZD7aopXkn-VFp68aUsY91Lijl1QhnAJNh0rdMIp_6xOtaTBAYXr6Gzx6"
 }
