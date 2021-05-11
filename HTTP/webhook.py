@@ -12,7 +12,7 @@ import configuration as cfg
 from schedule import every, repeat, run_pending
 #This array will save the different status of robot this will help to compare between the new status and the old one
 robot_status_list=[]
-
+notification=''
 
 #@repeat is a decorator provide from schedule. In our case notificationsHook will be ran every 30 seconds
 @repeat(every(30).seconds)
@@ -20,9 +20,9 @@ def notificationsHook():
     #set robot_status_list as a global array
     global robot_status_list
     #WebHokk URL Provided By Discord (this url serve to communicate with Discord App)
-    hook= Webhook(cfg.urls["webhookUrl"])
+    hook= Webhook(cfg.urls["webhookurl"])
     #urls contains the url of state from REST Server
-    url=cfg.urls["stateUrl"]
+    url=cfg.urls["stateurl"]
     #The result of this test will be stored in scheduleRequest & state_request to do the treatment afterwards
     state_request=False
     
@@ -47,7 +47,7 @@ def notificationsHook():
     if (state_request) :     
         calendar_image='https://img.icons8.com/color/48/000000/planner.png'
         # extracting state data in json format
-        list_state=requests.get(cfg.urls["stateUrl"]).json()
+        list_state=requests.get(cfg.urls["stateurl"]).json()
         #State MSG
         robot_state=':ballot_box_with_check:'
         humidity_state=':ballot_box_with_check:'
@@ -92,25 +92,25 @@ def notificationsHook():
             free_disk_msg=' below '+str(round(cfg.config['Settings']['disk']*100))+'%'
 
         #Warning Temperature 
-        if temperature_value <= cfg.config['Settings']['temperature']['Min']:
+        if temperature_value <= cfg.config['Settings']['temperature']['min']:
             temperature_state=':no_entry_sign:'
             color_msg=0xFF8800
-            temperature_msg='below '+str(int(cfg.config['Settings']['temperature']['Min']))+'°C'
+            temperature_msg='below '+str(int(cfg.config['Settings']['temperature']['min']))+'C'
           
-        elif temperature_value >= cfg.config['Settings']['temperature']['Max']:
+        elif temperature_value >= cfg.config['Settings']['temperature']['max']:
             temperature_state=':no_entry_sign:'
             color_msg=0xFF8800
-            temperature_msg='above '+str(int(cfg.config['Settings']['temperature']['Max']))+'°C'
+            temperature_msg='above '+str(int(cfg.config['Settings']['temperature']['max']))+'C'
             
         #Warning Humidity
-        if humidity_value <= cfg.config['Settings']['humidity']['Min']:
+        if humidity_value <= cfg.config['Settings']['humidity']['min']:
             humidity_state=':no_entry_sign:'
             color_msg=0xFF8800
-            humidity_msg='below '+str(int(cfg.config['Settings']['humidity']['Min']))+'%'
-        elif humidity_value >= cfg.config['Settings']['humidity']['Max']:
+            humidity_msg='below '+str(int(cfg.config['Settings']['humidity']['min']))+'%'
+        elif humidity_value >= cfg.config['Settings']['humidity']['max']:
             humidity_state=':no_entry_sign:'
             color_msg=0xFF8800
-            humidity_msg='above '+str(int(cfg.config['Settings']['humidity']['Max']))+'%'
+            humidity_msg='above '+str(int(cfg.config['Settings']['humidity']['max']))+'%'
 
         #Get the date and time from local to check with event in get request of schedule
         startDateNow= datetime.datetime.today().strftime('%Y-%m-%d')
@@ -132,7 +132,7 @@ def notificationsHook():
                                     '\n'+
                                     free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
                                     '\n'+
-                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
+                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'C '+temperature_msg+'\n'+
                                     '\n'+
                                     humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+'% '+humidity_msg,
                                     color=color_msg
@@ -153,7 +153,7 @@ def notificationsHook():
                                     '\n'+
                                     free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
                                     '\n'+
-                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
+                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'C '+temperature_msg+'\n'+
                                     '\n'+
                                     humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+'% '+humidity_msg,
                                     color=color_msg
