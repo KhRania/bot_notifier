@@ -7,7 +7,7 @@ config={ "Settings": {
       "Max": 30.0,
       "Min": 15.0,
     },
-    "AlertDiskValue":0.2,
+    "disk":0.2,
     "battery":0.2
   }}
 urls={

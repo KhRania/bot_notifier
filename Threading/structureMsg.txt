@@ -1,8 +1,8 @@
 03/02/2021 09H00 
 Failed: Next start AUTOPILOT NOW END 09H30
 Failed: ROBOT STATUS AUTOPILOT
-WARNING : Batterie status 0% minimum 10%
-WARNING : Temperature 10.1°C bellow minimum 15 °C
+WARNING : Batterie status 0% below 10%
+WARNING : Temperature 10.1°C bellow below 15 °C
 WARNING : Hydrometry 51% above max value 40%
 
 
@@ -10,8 +10,8 @@ WARNING : Hydrometry 51% above max value 40%
 26/01/2021 17H26
 OK: Next start AUTOPILOT NOW
 OK: ROBOT STATUS changed to DOCKING
-WARNING : Batterie status 0% below minimum 10%
-WARNING : Temperature 8.1°C bellow minimum 15 °C
+WARNING : Batterie status 0% below below 10%
+WARNING : Temperature 8.1°C bellow below 15 °C
 WARNING ! Hydrometrie 47% above max value 40%
 
 
@@ -19,5 +19,5 @@ WARNING ! Hydrometrie 47% above max value 40%
 Next start AUTOPILOT 27/01/2021 09H30
 OK: ROBOT STATUS changed to DOCKED
 OK : Batterie status 100%
-WARNING : Temperature 8.2°C bellow minimum 15 °C
+WARNING : Temperature 8.2°C bellow below 15 °C
 WARNING ! Hydrometrie 47% above max value 40%

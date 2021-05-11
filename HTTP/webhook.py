@@ -42,18 +42,18 @@ def notificationsHook():
             
             print('Success Connection To Rest Server!')
             state_request=True
-            schedule_request=True
+            
 
     if (state_request) :     
-        clock_image='https://img.icons8.com/doodle/48/000000/alarm-clock.png'
+        calendar_image='https://img.icons8.com/color/48/000000/planner.png'
         # extracting state data in json format
         list_state=requests.get(cfg.urls["stateUrl"]).json()
         #State MSG
-        robot_state=':white_check_mark:'
-        humidity_state=':white_check_mark:'
-        temperature_state=':white_check_mark:'
-        battery_state=':white_check_mark:'
-        free_disk_percentage_state=':white_check_mark:'
+        robot_state=':ballot_box_with_check:'
+        humidity_state=':ballot_box_with_check:'
+        temperature_state=':ballot_box_with_check:'
+        battery_state=':ballot_box_with_check:'
+        free_disk_percentage_state=':ballot_box_with_check:'
         #normal color msg blue
         color_msg=0x5CDBF0
         #Robot status
@@ -68,7 +68,7 @@ def notificationsHook():
         #humidity Message send with the notification is empty when humidity_value is normal
         humidity_msg=''
         # battery percentage
-        battery_percentage=int(list_state['battery']['percentage']*100)
+        battery_percentage=round(float(list_state['battery']['percentage']*100),1)
         #battery Message send with the notification is empty when battery_percentage is normal
         battery_msg=''
         #Free Disk Storage percentage
@@ -79,38 +79,38 @@ def notificationsHook():
         free_disk_msg=''
         
        
-        # Warning case if battery value < 0.4 msg for battery status switch to warning
-        if list_state['battery']['percentage']<0.4:
+        # Warning case if battery value < 0.2 msg for battery status switch to warning
+        if list_state['battery']['percentage']< cfg.config['Settings']['battery']:
             battery_state=':no_entry_sign:'
             color_msg=0xFF8800
-            battery_msg=' minimum 40%'
+            battery_msg=' below  '+str(round(cfg.config['Settings']['battery']*100))+'%'
 
         # Warning case if free_disk_percentage < 20 % msg for battery status switch to warning
-        if free_disk_percentage < round(cfg.config['Settings']['AlertDiskValue']*100,1):
+        if free_disk_percentage < round(cfg.config['Settings']['disk']*100,1):
             free_disk_percentage_state=':no_entry_sign:'
             color_msg=0xFF8800
-            free_disk_msg=' minimum 20%'
+            free_disk_msg=' below '+str(round(cfg.config['Settings']['disk']*100))+'%'
 
         #Warning Temperature 
         if temperature_value <= cfg.config['Settings']['temperature']['Min']:
             temperature_state=':no_entry_sign:'
             color_msg=0xFF8800
-            temperature_msg='minimum '+str(cfg.config['Settings']['temperature']['Min'])+' °C'
+            temperature_msg='below '+str(int(cfg.config['Settings']['temperature']['Min']))+'°C'
           
         elif temperature_value >= cfg.config['Settings']['temperature']['Max']:
             temperature_state=':no_entry_sign:'
             color_msg=0xFF8800
-            temperature_msg='maximum '+str(cfg.config['Settings']['temperature']['Max'])+' °C'
+            temperature_msg='above '+str(int(cfg.config['Settings']['temperature']['Max']))+'°C'
             
         #Warning Humidity
         if humidity_value <= cfg.config['Settings']['humidity']['Min']:
             humidity_state=':no_entry_sign:'
             color_msg=0xFF8800
-            humidity_msg='minimum '+str(cfg.config['Settings']['humidity']['Min'])+' %'
+            humidity_msg='below '+str(int(cfg.config['Settings']['humidity']['Min']))+'%'
         elif humidity_value >= cfg.config['Settings']['humidity']['Max']:
             humidity_state=':no_entry_sign:'
             color_msg=0xFF8800
-            humidity_msg='maximum '+str(cfg.config['Settings']['humidity']['Max'])+' %'
+            humidity_msg='above '+str(int(cfg.config['Settings']['humidity']['Max']))+'%'
 
         #Get the date and time from local to check with event in get request of schedule
         startDateNow= datetime.datetime.today().strftime('%Y-%m-%d')
@@ -126,20 +126,20 @@ def notificationsHook():
             #Prepare notification content to send with Webhook                
             notification = Embed(
 
-                                    description=robot_state+' : ROBOT STATUS '+robot_status+'\n'+
+                                    description=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+
                                     '\n'+
-                                    battery_state+' : Battery status :battery: '+str(battery_percentage)+' % '+battery_msg+'\n'+
+                                    battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
                                     '\n'+
-                                    free_disk_percentage_state+' : Free Storage :cd: '+str(free_disk_percentage)+' % '+free_disk_msg+'\n'+
+                                    free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
                                     '\n'+
-                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+' °C '+temperature_msg+'\n'+
+                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
                                     '\n'+
-                                    humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+' % '+humidity_msg,
+                                    humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+'% '+humidity_msg,
                                     color=color_msg
                                     
                                     )
 
-            notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow,icon_url=clock_image)
+            notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
             #Send the Notification to Discord
             hook.send(embed=notification)
         #test if the old status is different to the new one in this case the length of the array must be greater than 1    
@@ -147,20 +147,20 @@ def notificationsHook():
             #Prepare the notification to send with Webhook                
             notification = Embed(
 
-                                    description=robot_state+' : ROBOT STATUS '+robot_status+'\n'+
+                                    description=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+
                                    '\n'+
-                                    battery_state+' : Battery status :battery: '+str(battery_percentage)+' % '+battery_msg+'\n'+
+                                    battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
                                     '\n'+
-                                    free_disk_percentage_state+' : Free Storage :cd: '+str(free_disk_percentage)+' % '+free_disk_msg+'\n'+
+                                    free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
                                     '\n'+
-                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+' °C '+temperature_msg+'\n'+
+                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
                                     '\n'+
-                                    humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+' % '+humidity_msg,
+                                    humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+'% '+humidity_msg,
                                     color=color_msg
                                     
                                     )
 
-            notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow,icon_url=clock_image)
+            notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
             #Send the Notification to Discord
             hook.send(embed=notification)
             #to get only the last 2 elements of robot_status_list to avoid having an array with unlimited content

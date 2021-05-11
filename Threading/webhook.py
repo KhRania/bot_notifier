@@ -53,10 +53,10 @@ def notifications():
     
     # Warning case if battery value < 0.4 msg for battery status switch to warning
     if list_state['battery']['percentage']<0.4:
-        battery_state='**WARNING**'
+        battery_state=':no_entry_sign:'
 
     # Test the State if it is different for autopilot when start event then the msg is failed and the color is red 
-    if list_state['robot_state'].upper()!= 'AUTOPILOT':
+    if list_state['state'].upper()!= 'AUTOPILOT':
         robot_state='**Failed**'
         color_msg=0xF04747
     
@@ -64,7 +64,7 @@ def notifications():
     docking_state=False
     
     for event in list_schedule['scheduleData']:
-            while (list_state['robot_state'].lower() == 'docking'):
+            while (list_state['state'].lower() == 'docking'):
                 docking_state=True 
             #Get the dtae and time from local to check with event in schedule.json file
             startDateNow= datetime.datetime.today().strftime('%Y-%m-%d')
@@ -97,8 +97,8 @@ def notifications():
                     notification = Embed(
 
                         description=robot_state+' : Next start AUTOPILOT NOW END '+event['EndTime'][11:16]+'\n'+
-                        robot_state+' : ROBOT STATUS switched to '+list_state['robot_state']+'\n'+
-                        battery_state+' : Battery status '+str(battery_percentage)+' % minimum 40%'+'\n'+
+                        robot_state+' : ROBOT STATUS switched to '+list_state['state']+'\n'+
+                        battery_state+' : Battery status '+str(battery_percentage)+' % below 40%'+'\n'+
                         'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
                         'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
                         color=color_msg
@@ -112,7 +112,7 @@ def notifications():
                     
             #DOCKING MSG      
             if (startDateNow == event['StartTime'][0:10] and (event['StartTime'][11:16] < startTimeNow == event['EndTime'][11:16]) ):
-                if(list_state['robot_state'].lower() == 'docking'):
+                if(list_state['state'].lower() == 'docking'):
                         
                         robot_state='**OK**'
                         color_msg=0x5CDBF0
@@ -122,8 +122,8 @@ def notifications():
                         color_msg=0xF04747
                 notification = Embed(
                                 description=robot_state+' : Next start AUTOPILOT NOW'+'\n'+
-                                robot_state+' : ROBOT STATUS changed to '+list_state['robot_state']+'\n'+
-                                battery_state+' : Battery status '+str(battery_percentage)+' % minimum 40%'+'\n'+
+                                robot_state+' : ROBOT STATUS changed to '+list_state['state']+'\n'+
+                                battery_state+' : Battery status '+str(battery_percentage)+' % below 40%'+'\n'+
                                 'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
                                 'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
                                 color=color_msg
@@ -139,12 +139,12 @@ def notifications():
              
             #DOCKED MSG
             #To verify if the date and time for an event ae in the same date or for the case of midnight to take the state docked 
-            if (docking_state and list_state['robot_state'].lower() == 'docked'): #and ((startDateNow==event_nextDate and startTimeNow < event_nextTime) or (startDateNow < event_nextDate))) :
+            if (docking_state and list_state['state'].lower() == 'docked'): #and ((startDateNow==event_nextDate and startTimeNow < event_nextTime) or (startDateNow < event_nextDate))) :
                     
                 notification = Embed(
                                     description='Next start AUTOPILOT '+event_nextDate+' '+event_nextTime+'\n'+
-                                    '**OK**'+' : ROBOT STATUS switched to '+list_state['robot_state']+'\n'+
-                                    battery_state+' : Battery status '+str(battery_percentage)+' % minimum 40%'+'\n'+
+                                    '**OK**'+' : ROBOT STATUS switched to '+list_state['state']+'\n'+
+                                    battery_state+' : Battery status '+str(battery_percentage)+' % below 40%'+'\n'+
                                     'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
                                     'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
                                     color=0x5CDBF0
