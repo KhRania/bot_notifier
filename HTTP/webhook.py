@@ -7,6 +7,7 @@ from requests.exceptions import HTTPError
 from dhooks import Webhook, Embed
 import datetime
 import time
+from dateutil import tz
 import configuration as cfg
 #schedule the run of the function 
 from schedule import every, repeat, run_pending
@@ -47,7 +48,10 @@ def notificationsHook():
     if (state_request) :     
         calendar_image='https://img.icons8.com/color/48/000000/planner.png'
         # extracting state data in json format
+       
+        
         list_state=requests.get(cfg.urls["stateurl"]).json()
+       
         #State MSG
         robot_state=':ballot_box_with_check:'
         humidity_state=':ballot_box_with_check:'
@@ -81,34 +85,34 @@ def notificationsHook():
        
         # Warning case if battery value < 0.2 msg for battery status switch to warning
         if list_state['battery']['percentage']< cfg.config['Settings']['battery']:
-            battery_state=':no_entry_sign:'
+            battery_state='⚠️'
             color_msg=0xFF8800
             battery_msg=' below  '+str(round(cfg.config['Settings']['battery']*100))+'%'
 
         # Warning case if free_disk_percentage < 20 % msg for battery status switch to warning
         if free_disk_percentage < round(cfg.config['Settings']['disk']*100,1):
-            free_disk_percentage_state=':no_entry_sign:'
+            free_disk_percentage_state='⚠️'
             color_msg=0xFF8800
             free_disk_msg=' below '+str(round(cfg.config['Settings']['disk']*100))+'%'
 
         #Warning Temperature 
         if temperature_value <= cfg.config['Settings']['temperature']['min']:
-            temperature_state=':no_entry_sign:'
+            temperature_state='⚠️'
             color_msg=0xFF8800
-            temperature_msg='below '+str(int(cfg.config['Settings']['temperature']['min']))+'C'
+            temperature_msg='below '+str(int(cfg.config['Settings']['temperature']['min']))+'°C'
           
         elif temperature_value >= cfg.config['Settings']['temperature']['max']:
-            temperature_state=':no_entry_sign:'
+            temperature_state='⚠️'
             color_msg=0xFF8800
-            temperature_msg='above '+str(int(cfg.config['Settings']['temperature']['max']))+'C'
+            temperature_msg='above '+str(int(cfg.config['Settings']['temperature']['max']))+'°C'
             
         #Warning Humidity
         if humidity_value <= cfg.config['Settings']['humidity']['min']:
-            humidity_state=':no_entry_sign:'
+            humidity_state='⚠️'
             color_msg=0xFF8800
             humidity_msg='below '+str(int(cfg.config['Settings']['humidity']['min']))+'%'
         elif humidity_value >= cfg.config['Settings']['humidity']['max']:
-            humidity_state=':no_entry_sign:'
+            humidity_state='⚠️'
             color_msg=0xFF8800
             humidity_msg='above '+str(int(cfg.config['Settings']['humidity']['max']))+'%'
 
@@ -118,51 +122,100 @@ def notificationsHook():
       
         # Test the Status if it FAILED the msg of th robot state is failed and the color is red 
         if list_state['state'].lower() == 'failure':
-                robot_state=':no_entry_sign:'
+                robot_state='⚠️'
                 color_msg=0xF04747
-        
+
         #test the length of the array to send the first notification     
         if (len(robot_status_list)==1):
-            #Prepare notification content to send with Webhook                
-            notification = Embed(
+            if(len(list_state['current_events'])==1):
+                #Auto-detect zones:
+                to_zone = tz.tzlocal()
+                # utc = datetime.utcnow()
+                utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
+                # Tell the datetime object that it's in UTC time zone since 
+                # datetime objects are 'naive' by default
+                utc = utc.replace(tzinfo=to_zone)               
+                print (utc)
+                #Prepare notification content to send with Webhook                
+                notification = Embed(
+                                        description=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+str(utc)+'\n'+
+                                        '\n'+
+                                        battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
+                                        '\n'+
+                                        free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
+                                        '\n'+
+                                        temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
+                                        '\n'+
+                                        humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg,
+                                        color=color_msg
+                                        
+                                        )
 
-                                    description=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+
-                                    '\n'+
-                                    battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
-                                    '\n'+
-                                    free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
-                                    '\n'+
-                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'C '+temperature_msg+'\n'+
-                                    '\n'+
-                                    humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+'% '+humidity_msg,
-                                    color=color_msg
-                                    
-                                    )
+                notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
+                #Send the Notification to Discord
+                hook.send(embed=notification)
+            else:
+                #Prepare notification content to send with Webhook                
+                notification = Embed(
+                                        description=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+
+                                        '\n'+
+                                        battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
+                                        '\n'+
+                                        free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
+                                        '\n'+
+                                        temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
+                                        '\n'+
+                                        humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg,
+                                        color=color_msg
+                                        
+                                        )
 
-            notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
-            #Send the Notification to Discord
-            hook.send(embed=notification)
+                notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
+                #Send the Notification to Discord
+                hook.send(embed=notification)
+
         #test if the old status is different to the new one in this case the length of the array must be greater than 1    
-        elif ((len(robot_status_list)>1) and (robot_status!=robot_status_list[-2]))  :              
-            #Prepare the notification to send with Webhook                
-            notification = Embed(
+        elif ((len(robot_status_list)>1) and (robot_status!=robot_status_list[-2]))  :
+            if(list_state['current_events'][0]):
+                #Prepare notification content to send with Webhook                
+                notification = Embed(
 
-                                    description=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+
-                                   '\n'+
-                                    battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
-                                    '\n'+
-                                    free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
-                                    '\n'+
-                                    temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'C '+temperature_msg+'\n'+
-                                    '\n'+
-                                    humidity_state+' : Hydrometry :droplet: '+str(humidity_value)+'% '+humidity_msg,
-                                    color=color_msg
-                                    
-                                    )
+                                        description=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+str(utc)+'\n'+
+                                        '\n'+
+                                        battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
+                                        '\n'+
+                                        free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
+                                        '\n'+
+                                        temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
+                                        '\n'+
+                                        humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg,
+                                        color=color_msg
+                                        
+                                        )
 
-            notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
-            #Send the Notification to Discord
-            hook.send(embed=notification)
+                notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
+                #Send the Notification to Discord
+                hook.send(embed=notification)
+            else:
+                #Prepare notification content to send with Webhook                
+                notification = Embed(
+                                        description=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+
+                                        '\n'+
+                                        battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
+                                        '\n'+
+                                        free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
+                                        '\n'+
+                                        temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
+                                        '\n'+
+                                        humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg,
+                                        color=color_msg
+                                        
+                                        )
+
+                notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
+                #Send the Notification to Discord
+                hook.send(embed=notification)              
+           
             #to get only the last 2 elements of robot_status_list to avoid having an array with unlimited content
             robot_status_list=robot_status_list[-2:]
             

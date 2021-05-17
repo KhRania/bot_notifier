@@ -42,3 +42,9 @@
 <li>reference : https://pypi.org/project/schedule/</li>
 </ul>
 
+## 6) discord.py  : 
+    discord.py allows to interact with discord server. 
+<ul>
+<li>Install : python3 -m pip install -U discord.py</li>
+<li>reference : https://pypi.org/project/discord.py/ https://github.com/Rapptz/discord.py/blob/master/examples/reply.py</li>
+</ul>

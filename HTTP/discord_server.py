@@ -17,13 +17,19 @@ async def on_ready():
 #when  receive message
 @client.event
 async def on_message(message):
-
+  # we do not want the bot to reply to itself
   if message.author == client.user:
     print('User sends a msg')
   if message.content.startswith('!notify'):
   
     await message.channel.send('hello!')
-
-
+#new member join the server    
+@client.event
+async def on_member_join(member):
+        guild = member.guild
+        if guild.system_channel is not None:
+            to_send = f'Welcome {member.mention} to {guild.name}!'
+            await guild.system_channel.send(to_send)
+            print("welcome !")
 #notificationsHook()
 client.run(cfg.urls["token"])
