@@ -13,13 +13,14 @@ import configuration as cfg
 from schedule import every, repeat, run_pending
 #This array will save the different status of robot this will help to compare between the new status and the old one
 robot_status_list=[]
-notification=''
+notification_msg=''
 
 #@repeat is a decorator provide from schedule. In our case notificationsHook will be ran every 30 seconds
 @repeat(every(30).seconds)
 def notificationsHook():
     #set robot_status_list as a global array
     global robot_status_list
+    global notification_msg
     #WebHokk URL Provided By Discord (this url serve to communicate with Discord App)
     hook= Webhook(cfg.urls["webhookurl"])
     #urls contains the url of state from REST Server
@@ -120,33 +121,26 @@ def notificationsHook():
         startDateNow= datetime.datetime.today().strftime('%Y-%m-%d')
         startTimeNow= datetime.datetime.now().time().strftime("%H:%M")
       
-        # Test the Status if it FAILED the msg of th robot state is failed and the color is red 
-        if list_state['state'].lower() == 'failure':
+        # Test the Status if it FAILED or EMERGENCY the msg of th robot state is failed and the color is red 
+        if list_state['state'].lower() == 'failure' or list_state['state'].lower() == 'emergency':
                 robot_state='⚠️'
                 color_msg=0xF04747
 
         #test the length of the array to send the first notification     
         if (len(robot_status_list)==1):
             if(len(list_state['current_events'])==1):
-                #Auto-detect zones:
-                to_zone = tz.tzlocal()
+                
                 # utc = datetime.utcnow()
-                utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
-                # Tell the datetime object that it's in UTC time zone since 
-                # datetime objects are 'naive' by default
-                utc = utc.replace(tzinfo=to_zone)               
-                print (utc)
+                end_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
+                local_time= end_time_event_utc.time()
+                now_timestamp = time.time()
+                offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+                end_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),local_time) + offset).time())
+
+                notification_msg=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+end_time_event_local[:5]+'\n'+'\n'+battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+'\n'+free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+'\n'+temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+'\n'+humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg
                 #Prepare notification content to send with Webhook                
                 notification = Embed(
-                                        description=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+str(utc)+'\n'+
-                                        '\n'+
-                                        battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
-                                        '\n'+
-                                        free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
-                                        '\n'+
-                                        temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
-                                        '\n'+
-                                        humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg,
+                                        description=notification_msg,
                                         color=color_msg
                                         
                                         )
@@ -155,17 +149,10 @@ def notificationsHook():
                 #Send the Notification to Discord
                 hook.send(embed=notification)
             else:
-                #Prepare notification content to send with Webhook                
+                #Prepare notification content to send with Webhook
+                notification_msg=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+'\n'+free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+'\n'+temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+'\n'+humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg
                 notification = Embed(
-                                        description=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+
-                                        '\n'+
-                                        battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
-                                        '\n'+
-                                        free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
-                                        '\n'+
-                                        temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
-                                        '\n'+
-                                        humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg,
+                                        description=notification_msg,
                                         color=color_msg
                                         
                                         )
@@ -176,19 +163,20 @@ def notificationsHook():
 
         #test if the old status is different to the new one in this case the length of the array must be greater than 1    
         elif ((len(robot_status_list)>1) and (robot_status!=robot_status_list[-2]))  :
-            if(list_state['current_events'][0]):
-                #Prepare notification content to send with Webhook                
+            if(len(list_state['current_events'])==1):
+                 
+                # utc = datetime.utcnow()
+                end_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
+                local_time= end_time_event_utc.time()
+                now_timestamp = time.time()
+                offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+                end_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),local_time) + offset).time())
+                #Prepare notification content to send with Webhook 
+                notification_msg=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+end_time_event_local[:5]+'\n'+'\n'+battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+'\n'+free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+'\n'+temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+'\n'+humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg
+               
                 notification = Embed(
 
-                                        description=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+str(utc)+'\n'+
-                                        '\n'+
-                                        battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
-                                        '\n'+
-                                        free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
-                                        '\n'+
-                                        temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
-                                        '\n'+
-                                        humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg,
+                                        description=notification_msg,
                                         color=color_msg
                                         
                                         )
@@ -197,17 +185,11 @@ def notificationsHook():
                 #Send the Notification to Discord
                 hook.send(embed=notification)
             else:
+                notification_msg=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+'\n'+free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+'\n'+temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+'\n'+humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg
+
                 #Prepare notification content to send with Webhook                
                 notification = Embed(
-                                        description=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+
-                                        '\n'+
-                                        battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+
-                                        '\n'+
-                                        free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+
-                                        '\n'+
-                                        temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+
-                                        '\n'+
-                                        humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg,
+                                        description=notification_msg,
                                         color=color_msg
                                         
                                         )
