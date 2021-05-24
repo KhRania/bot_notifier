@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 from errno import ENETUNREACH
 import requests
 from requests.exceptions import HTTPError
@@ -13,12 +12,12 @@ import configuration as cfg
 import schedule 
 
 
-class stateInformations:
+class notificationHook:
 
     #set robot_status_list as a global array
     robot_status_list=[]
     #json content of state url
-    list_state='{}'
+    #list_state='{}'
     #WebHokk URL Provided By Discord (this url serve to communicate with Discord App)
     discord_channel=cfg.urls["webhookurl"]
     #urls contains the url of state from REST Server
@@ -35,7 +34,7 @@ class stateInformations:
     startTimeNow= datetime.datetime.now().time().strftime("%H:%M")
 
     
-    def getStateURL(self):
+    def getRequestURL(self):
       
         hook= Webhook(self.discord_channel)
         #The result of this test will be stored in scheduleRequest & state_request to do the treatment afterwards
@@ -58,22 +57,151 @@ class stateInformations:
                 print('Success Connection To Rest Server!')
                 state_request=True
                 # extracting state data in json format
-                self.list_state=requests.get(self.state_url).json()
-                print (self.list_state)
-                send_data=self.list_state
-        return state_request
+                list_state=requests.get(self.state_url).json()
+        return state_request,list_state
+
+    def batteryMessage(self):
+        state_request,list_state=self.getRequestURL()
+        if(state_request):
+            # battery percentage
+            battery_percentage=round(float(list_state['battery']['percentage']*100),1)
+            #icon if value normal
+            battery_state=':ballot_box_with_check:'
+            #battery Message send with the notification is empty when battery_percentage is normal
+            battery_msg=battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '
+            #normal color msg blue
+            color_msg=0x5CDBF0
+            # Warning case if battery value < 0.2 msg for battery status switch to warning
+            if list_state['battery']['percentage']< cfg.config['Settings']['battery']:
+                battery_state='⚠️'
+                color_msg=0xFF8800
+                battery_msg=battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+'below  '+str(round(cfg.config['Settings']['battery']*100))+'%'
         
+        return battery_msg
+    
+    def storageMessage(self):
+        state_request,list_state=self.getRequestURL()
+        if(state_request):
+            #icon if value normal
+            free_disk_percentage_state=':ballot_box_with_check:'
+            #normal color msg blue
+            color_msg=0x5CDBF0
+            #Free Disk Storage percentage
+            free_disk_percentage=round((float(list_state['storage']['free'])/float(list_state['storage']['total']))*100,1)
+            #free_disk Message send with the notification is empty when free_disk_percentage is normal
+            free_disk_msg=free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '
+            # Warning case if free_disk_percentage < 20 % msg for battery status switch to warning
+            if free_disk_percentage < round(cfg.config['Settings']['disk']*100,1):
+                free_disk_percentage_state='⚠️'
+                color_msg=0xFF8800
+                free_disk_msg=free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+'below '+str(round(cfg.config['Settings']['disk']*100))+'%'
+        return free_disk_msg
+
+    def temperatureMessage(self):
+        state_request,list_state=self.getRequestURL()
+        if(state_request):
+            #icon if value normal
+            temperature_state=':ballot_box_with_check:'
+            #normal color msg blue
+            color_msg=0x5CDBF0
+            #Temperature Value
+            temperature_value=list_state['sensors']['temperature']
+            #Temperature Message send with the notification is empty when temperature_value is normal
+            temperature_msg=temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '
+             #Warning Temperature 
+            if temperature_value <= cfg.config['Settings']['temperature']['min']:
+                temperature_state='⚠️'
+                color_msg=0xFF8800
+                temperature_msg=temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C below '+str(int(cfg.config['Settings']['temperature']['min']))+'°C'
+            elif temperature_value >= cfg.config['Settings']['temperature']['max']:
+                temperature_state='⚠️'
+                color_msg=0xFF8800
+                temperature_msg=temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C above '+str(int(cfg.config['Settings']['temperature']['max']))+'°C'
+        
+        return temperature_msg
+
+
+    def humidityMessage(self):
+        state_request,list_state=self.getRequestURL()
+        if(state_request):
+            #icon if value normal
+            humidity_state=':ballot_box_with_check:'
+            #humidity Value
+            humidity_value=list_state['sensors']['humidity']
+            #humidity Message send with the notification is empty when humidity_value is normal
+            humidity_msg=humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '
+            #normal color msg blue
+            color_msg=0x5CDBF0
+            #Warning Humidity
+            if humidity_value <= cfg.config['Settings']['humidity']['min']:
+                humidity_state='⚠️'
+                color_msg=0xFF8800
+                humidity_msg=humidity_state+' : Humidity :droplet: '+str(humidity_value)+'%'+' below '+str(int(cfg.config['Settings']['humidity']['min']))+'%'
+            elif humidity_value >= cfg.config['Settings']['humidity']['max']:
+                humidity_state='⚠️'
+                color_msg=0xFF8800
+                humidity_msg=humidity_state+' : Humidity :droplet: '+str(humidity_value)+'%'+' above '+str(int(cfg.config['Settings']['humidity']['max']))+'%'
+        return humidity_msg
+    
+    def stateMessage(self):
+        robot_status_list=[]
+        state_request,list_state=self.getRequestURL()
+        if(state_request):
+        
+            #Get the date and time from local to check with event in get request of schedule
+            startDateNow= datetime.datetime.today().strftime('%Y-%m-%d')
+            startTimeNow= datetime.datetime.now().time().strftime("%H:%M")
+            #Robot status
+            robot_status=list_state['state']
+            robot_status_list.append(robot_status)
+            # Test the Status if it FAILED or EMERGENCY the msg of th robot state is failed and the color is red 
+            if list_state['state'].lower() == 'failure' or list_state['state'].lower() == 'emergency':
+                    robot_state='⚠️'
+                    color_msg=0xF04747
+
+            #test the length of the array to send the first notification     
+            if (len(robot_status_list)==1):
+                if(len(list_state['current_events'])==1):
+                    
+                    # utc = datetime.utcnow()
+                    end_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
+                    local_time= end_time_event_utc.time()
+                    now_timestamp = time.time()
+                    offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+                    end_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),local_time) + offset).time())
+
+                    notification_msg=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+end_time_event_local[:5]+'\n'+'\n'
+                else:
+                    #Prepare notification content to send with Webhook
+                    notification_msg=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'
+
+             #test if the old status is different to the new one in this case the length of the array must be greater than 1    
+            elif ((len(robot_status_list)>1) and (robot_status!=robot_status_list[-2]))  :
+                if(len(list_state['current_events'])==1):
+                    
+                    # utc = datetime.utcnow()
+                    end_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
+                    local_time= end_time_event_utc.time()
+                    now_timestamp = time.time()
+                    offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+                    end_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),local_time) + offset).time())
+                    #Prepare notification content to send with Webhook 
+                    notification_msg=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+end_time_event_local[:5]+'\n'+'\n'
+                else:
+                    notification_msg=robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'
+            #to get only the last 2 elements of robot_status_list to avoid having an array with unlimited content
+            robot_status_list=robot_status_list[-2:]        
+
+    
+
+
+        
+
   
 
 if __name__ == "__main__":    
-    notif= stateInformations()
-   
-    schedule.every(30).seconds.do(notif.getStateURL)
-    #While true repeat the execution of the function notificationsHook
-    while True:
+    notif= notificationHook()
+    notif.getRequestURL () 
 
-        schedule.run_pending()
-        time.sleep(1) 
     
-
 
