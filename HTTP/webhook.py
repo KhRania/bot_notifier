@@ -48,9 +48,10 @@ def notificationsHook():
 
     if (state_request) :     
         calendar_image='https://img.icons8.com/color/48/000000/planner.png'
+        calendar=':calendar_spiral:'
+       
         # extracting state data in json format
        
-        
         list_state=requests.get(cfg.urls["stateurl"]).json()
        
         #State MSG
@@ -129,15 +130,21 @@ def notificationsHook():
         #test the length of the array to send the first notification     
         if (len(robot_status_list)==1):
             if(len(list_state['current_events'])==1):
-                
-                # utc = datetime.utcnow()
-                end_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
-                local_time= end_time_event_utc.time()
+
                 now_timestamp = time.time()
                 offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
-                end_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),local_time) + offset).time())
+                #time start event
+                start_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['start'], '%Y-%m-%d %H:%M:%S')
+                start_local_time= start_time_event_utc.time()
+                start_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),start_local_time) + offset).time())
+                #time end event
+                end_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
+                end_local_time= end_time_event_utc.time()
+                end_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),end_local_time) + offset).time())
+                print(start_time_event_local[:5])
+                print(end_time_event_local[:5])
 
-                notification_msg=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+end_time_event_local[:5]+'\n'+'\n'+battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+'\n'+free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+'\n'+temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+'\n'+humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg
+                notification_msg=calendar+' : Start Event '+'**'+list_state['current_events'][0]['start'][:11]+'**'+' Time '+'**'+start_time_event_local[:5]+'**'+'\n'+'\n'+calendar+' : End Event '+'**'+list_state['current_events'][0]['stop'][:11]+'**'+' Time '+'**'+end_time_event_local[:5]+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+'\n'+free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+'\n'+temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+'\n'+humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg
                 #Prepare notification content to send with Webhook                
                 notification = Embed(
                                         description=notification_msg,
@@ -145,7 +152,7 @@ def notificationsHook():
                                         
                                         )
 
-                notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
+                
                 #Send the Notification to Discord
                 hook.send(embed=notification)
             else:
@@ -164,24 +171,28 @@ def notificationsHook():
         #test if the old status is different to the new one in this case the length of the array must be greater than 1    
         elif ((len(robot_status_list)>1) and (robot_status!=robot_status_list[-2]))  :
             if(len(list_state['current_events'])==1):
-                 
-                # utc = datetime.utcnow()
-                end_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
-                local_time= end_time_event_utc.time()
+
                 now_timestamp = time.time()
                 offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
-                end_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),local_time) + offset).time())
-                #Prepare notification content to send with Webhook 
-                notification_msg=robot_state+' : Next start '+'**'+robot_status+'**'+' now end '+end_time_event_local[:5]+'\n'+'\n'+battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+'\n'+free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+'\n'+temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+'\n'+humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg
-               
-                notification = Embed(
+                #time start event
+                start_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['start'], '%Y-%m-%d %H:%M:%S')
+                start_local_time= start_time_event_utc.time()
+                start_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),start_local_time) + offset).time())
+                #time end event
+                end_time_event_utc = datetime.datetime.strptime(list_state['current_events'][0]['stop'], '%Y-%m-%d %H:%M:%S')
+                end_local_time= end_time_event_utc.time()
+                end_time_event_local =str((datetime.datetime.combine(datetime.date(1,1,1),end_local_time) + offset).time())
+                print(start_time_event_local[:5])
+                print(end_time_event_local[:5])
 
+                notification_msg=calendar+' : Start Event '+'**'+list_state['current_events'][0]['start'][:11]+'**'+' Time '+'**'+start_time_event_local[:5]+'**'+'\n'+'\n'+calendar+' : End Event '+'**'+list_state['current_events'][0]['stop'][:11]+'**'+' Time '+'**'+end_time_event_local[:5]+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+battery_msg+'\n'+'\n'+free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+free_disk_msg+'\n'+'\n'+temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '+temperature_msg+'\n'+'\n'+humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '+humidity_msg
+                #Prepare notification content to send with Webhook                
+                notification = Embed(
                                         description=notification_msg,
                                         color=color_msg
                                         
                                         )
 
-                notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow, icon_url=calendar_image)
                 #Send the Notification to Discord
                 hook.send(embed=notification)
             else:

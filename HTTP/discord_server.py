@@ -158,7 +158,7 @@ def getUrl():
                         #to get only the last 2 elements of robot_status_list to avoid having an array with unlimited content
         robot_status_list=robot_status_list[-2:]
     
-    return notification_msg,color_msg
+    return notification_msg,color_msg,state_request
 
 
 
@@ -173,10 +173,6 @@ async def on_ready():
 #when  receive message
 @client.event
 async def on_message(message):
-
-  
-  if message.author != bot.user:
-        await bot.send_message(message.channel, message.content)
   
   # we do not want the bot to reply to itself
   if message.author == client.user:
@@ -185,12 +181,16 @@ async def on_message(message):
     #Get the date and time from local to check with event in get request of schedule
     startDateNow= datetime.datetime.today().strftime('%Y-%m-%d')
     startTimeNow= datetime.datetime.now().time().strftime("%H:%M")
-    notification,color=getUrl()
-    if notification:
+    notification,color,status_request=getUrl()
+    if notification and status_request==True:
       embedVar = discord.Embed(title='Date : '+startDateNow+' Time : '+startTimeNow, description=notification ,color=color)   
       await message.channel.send(embed=embedVar)
-    else:
-      await message.channel.send("no notification to send")
+    if status_request== False:
+      embedVar = discord.Embed(description=":loudspeaker: ** No notification to send problem with REST server**" ,color=0xc0c6c8 )   
+      await message.channel.send(embed=embedVar)
+     
+    
+
 
 
 #new member join the server    
