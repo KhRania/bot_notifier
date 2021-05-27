@@ -27,10 +27,14 @@ async def on_ready():
 async def on_message(message):
   notif= Notification()
   notification_msg,color_msg=notif.msgNotify()
+  notify_msg='!notify'
+  
   # we do not want the bot to reply to itself
   if message.author == client.user:
-    print('User sends a msg')
-  if message.content.startswith('!notify'):
+    print('Bot sends a msg')
+  else:
+    print('User send a msg')  
+  if message.content.lower()==notify_msg:
  
     if notification_msg:
         embedVar = discord.Embed(description=notification_msg ,color=color_msg)   
