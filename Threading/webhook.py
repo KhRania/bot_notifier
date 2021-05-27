@@ -100,7 +100,7 @@ def notifications():
                         robot_state+' : ROBOT STATUS switched to '+list_state['state']+'\n'+
                         battery_state+' : Battery status '+str(battery_percentage)+' % below 40%'+'\n'+
                         'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
-                        'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
+                        'humidity '+str(list_state['sensors']['humidity'])+' %',
                         color=color_msg
                         
                         )
@@ -125,7 +125,7 @@ def notifications():
                                 robot_state+' : ROBOT STATUS changed to '+list_state['state']+'\n'+
                                 battery_state+' : Battery status '+str(battery_percentage)+' % below 40%'+'\n'+
                                 'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
-                                'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
+                                'humidity '+str(list_state['sensors']['humidity'])+' %',
                                 color=color_msg
                                     )
 
@@ -146,7 +146,7 @@ def notifications():
                                     '**OK**'+' : ROBOT STATUS switched to '+list_state['state']+'\n'+
                                     battery_state+' : Battery status '+str(battery_percentage)+' % below 40%'+'\n'+
                                     'Temperature '+str(list_state['sensors']['temperature'])+' °C'+'\n'+
-                                    'Hydrometry '+str(list_state['sensors']['humidity'])+' %',
+                                    'humidity '+str(list_state['sensors']['humidity'])+' %',
                                     color=0x5CDBF0
                                     )
                 notification.set_author(name='Date : '+startDateNow+' Time : '+startTimeNow)

@@ -8,7 +8,7 @@ import schedule
 import time
 import datetime
 from keep_alive import keep_alive
-from test import notificationHook
+from modules import Notification
 
 
 
@@ -25,19 +25,21 @@ async def on_ready():
 #when  receive message
 @client.event
 async def on_message(message):
-  
+  notif= Notification()
+  notification_msg,color_msg=notif.msgNotify()
   # we do not want the bot to reply to itself
   if message.author == client.user:
     print('User sends a msg')
   if message.content.startswith('!notify'):
  
-    if notification and status_request==True:
-      embedVar = discord.Embed(title='Date : '+startDateNow+' Time : '+startTimeNow, description=notification ,color=color)   
+    if notification_msg:
+        embedVar = discord.Embed(description=notification_msg ,color=color_msg)   
+        await message.channel.send(embed=embedVar)
+      
+    else:
+      embedVar = discord.Embed(description="🔕   ** REST Server not available No notification to send **" ,color=0xc0c6c8 )   
       await message.channel.send(embed=embedVar)
-    if status_request== False:
-      embedVar = discord.Embed(description=":loudspeaker: ** No notification to send problem with REST server**" ,color=0xc0c6c8 )   
-      await message.channel.send(embed=embedVar)
-     
+      
     
 
 

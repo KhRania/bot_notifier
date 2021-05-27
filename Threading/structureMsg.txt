@@ -3,7 +3,7 @@ Failed: Next start AUTOPILOT NOW END 09H30
 Failed: ROBOT STATUS AUTOPILOT
 WARNING : Batterie status 0% below 10%
 WARNING : Temperature 10.1°C bellow below 15 °C
-WARNING : Hydrometry 51% above max value 40%
+WARNING : humidity 51% above max value 40%
 
 
 

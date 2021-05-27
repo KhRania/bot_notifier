@@ -8,11 +8,10 @@ import datetime
 import time
 from dateutil import tz
 import configuration as cfg
-#schedule the run of the function 
-import schedule 
 
 
-class notificationHook:
+
+class Notification:
 
     #set robot_status_list as a global array
     robot_status_list=[]
@@ -39,12 +38,14 @@ class notificationHook:
                 print(f'Other error occurred: {err}')  # Python 3.6
             #No Exception raised => Connection to the Rest Server with success    
             else:
+                
                 state_request=True
                 # extracting state data in json format
                 list_state=requests.get(self.state_url).json()
         return state_request,list_state
 
     def batteryMessage(self):
+        battery_msg=''
         #normal color msg blue
         color_msg=0x5CDBF0
         state_request,list_state=self.getRequestURL()
@@ -65,6 +66,7 @@ class notificationHook:
         return battery_msg,color_msg
     
     def storageMessage(self):
+        free_disk_msg=''
         #normal color msg blue
         color_msg=0x5CDBF0
         state_request,list_state=self.getRequestURL()
@@ -83,6 +85,7 @@ class notificationHook:
         return free_disk_msg,color_msg
 
     def temperatureMessage(self):
+        temperature_msg=''
         #normal color msg blue
         color_msg=0x5CDBF0
         state_request,list_state=self.getRequestURL()
@@ -107,6 +110,7 @@ class notificationHook:
 
 
     def humidityMessage(self):
+        humidity_msg=''
         #normal color msg blue
         color_msg=0x5CDBF0
         state_request,list_state=self.getRequestURL()
@@ -178,62 +182,112 @@ class notificationHook:
             
 
 
-    def stateMessage(self):
-        battery_msg,colorB=self.batteryMessage()
-        free_disk_msg,colorS=self.storageMessage()
-        temperature_msg,colorT=self.temperatureMessage()
-        humidity_msg,colorH=self.humidityMessage()
+    def msgWebhook(self):
         #normal color msg blue
         color_msg=0x5CDBF0
-        color_warning=0xFF8800
-        #list color to choose the color of the notification to send
-        for color_warning in [colorB,colorS,colorT,colorH]:
-            color_msg= color_warning
-        #icon calendar to be added in the notification to send
-        calendar=':calendar_spiral:'
-        dateNow,timeNow=self.getNow()
-        startTime,endTime=self.getEventTime()
-        startDate,endDate=self.getEventDate()
-        #State icon for normal state ( ex: AUTOPILOT)
-        robot_state=':ballot_box_with_check:'
         notification_msg=''
-        state_request,list_state=self.getRequestURL()
-        if(state_request):
-            #Robot status
-            robot_status=list_state['state']
-            self.robot_status_list.append(robot_status)
-            # Test the Status if it FAILED or EMERGENCY the msg of th robot state is failed and the color is red 
-            if list_state['state'].lower() == 'failure' or list_state['state'].lower() == 'emergency':
-                    robot_state='⚠️'
-                    color_msg=0xF04747
-            #test the length of the array to send the first notification     
-            if (len(self.robot_status_list)==1):
-                if(startTime and endTime and startDate and endDate):
-                    #Prepare notification content to send with Webhook
-                    notification_msg=calendar+' : Start Event '+'**'+startDate+'**'+' Time '+'**'+startTime+'**'+'\n'+'\n'+calendar+' : End Event '+'**'+endDate+'**'+' Time '+'**'+endTime+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
-                else:
-                    notification_msg=calendar+' ** Date :** '+'**'+dateNow+'**'+' **Time ** '+'**'+timeNow+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
+        try:
+            battery_msg,colorB=self.batteryMessage()
+            free_disk_msg,colorS=self.storageMessage()
+            temperature_msg,colorT=self.temperatureMessage()
+            humidity_msg,colorH=self.humidityMessage()
+            color_warning=0xFF8800
+            #list color to choose the color of the notification to send
+            for color_warning in [colorB,colorS,colorT,colorH]:
+                color_msg= color_warning
+            #icon calendar to be added in the notification to send
+            calendar=':calendar_spiral:'
+            dateNow,timeNow=self.getNow()
+            startTime,endTime=self.getEventTime()
+            startDate,endDate=self.getEventDate()
+            #State icon for normal state ( ex: AUTOPILOT)
+            robot_state=':ballot_box_with_check:'
+            state_request,list_state=self.getRequestURL()
+            if(state_request):
+                print('Success Connection To Rest Server!')
+                #Robot status
+                robot_status=list_state['state']
+                self.robot_status_list.append(robot_status)
+                # Test the Status if it FAILED or EMERGENCY the msg of th robot state is failed and the color is red 
+                if list_state['state'].lower() == 'failure' or list_state['state'].lower() == 'emergency':
+                        robot_state='⚠️'
+                        color_msg=0xF04747
+                #test the length of the array to send the first notification     
+                if (len(self.robot_status_list)==1):
+                    if(startTime and endTime and startDate and endDate):
+                        #Prepare notification content to send with Webhook
+                        notification_msg=calendar+' : Start Event '+'**'+startDate+'**'+' Time '+'**'+startTime+'**'+'\n'+'\n'+calendar+' : End Event '+'**'+endDate+'**'+' Time '+'**'+endTime+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
+                    else:
+                        notification_msg=calendar+' ** Date :** '+'**'+dateNow+'**'+' **Time ** '+'**'+timeNow+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
 
-            #test if the old status is different to the new one in this case the length of the array must be greater than 1    
-            elif ((len(self.robot_status_list)>1) and (robot_status!=self.robot_status_list[-2]))  :
-                if(startTime and endTime and startDate and endDate):
-                    #Prepare notification content to send with Webhook 
-                    notification_msg=calendar+' : Start Event '+'**'+startDate+'**'+' Time '+'**'+startTime+'**'+'\n'+'\n'+calendar+' : End Event '+'**'+endDate+'**'+' Time '+'**'+endTime+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
-                else:
-                    notification_msg=calendar+' ** Date :** '+'**'+dateNow+'**'+' **Time ** '+'**'+timeNow+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
-            #to get only the last 2 elements of robot_status_list to avoid having an array with unlimited content
-            self.robot_status_list=self.robot_status_list[-2:]
-            return notification_msg,color_msg         
+                #test if the old status is different to the new one in this case the length of the array must be greater than 1    
+                elif ((len(self.robot_status_list)>1) and (robot_status!=self.robot_status_list[-2]))  :
+                    if(startTime and endTime and startDate and endDate):
+                        #Prepare notification content to send with Webhook 
+                        notification_msg=calendar+' : Start Event '+'**'+startDate+'**'+' Time '+'**'+startTime+'**'+'\n'+'\n'+calendar+' : End Event '+'**'+endDate+'**'+' Time '+'**'+endTime+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
+                    else:
+                        notification_msg=calendar+' ** Date :** '+'**'+dateNow+'**'+' **Time ** '+'**'+timeNow+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
+                #to get only the last 2 elements of robot_status_list to avoid having an array with unlimited content
+                self.robot_status_list=self.robot_status_list[-2:]
+        except Exception as err:
+            print(f'Other error occurred: {err}')  # Python 3.6
+        return notification_msg,color_msg         
     
+
+    def msgNotify(self):
+        #normal color msg blue
+        color_msg=0x5CDBF0
+        notification_msg=''
+        try:
+            
+            battery_msg,colorB=self.batteryMessage()
+            free_disk_msg,colorS=self.storageMessage()
+            temperature_msg,colorT=self.temperatureMessage()
+            humidity_msg,colorH=self.humidityMessage()
+            color_warning=0xFF8800
+            #list color to choose the color of the notification to send
+            for color_warning in [colorB,colorS,colorT,colorH]:
+                color_msg= color_warning
+            #icon calendar to be added in the notification to send
+            calendar=':calendar_spiral:'
+            dateNow,timeNow=self.getNow()
+            startTime,endTime=self.getEventTime()
+            startDate,endDate=self.getEventDate()
+            #State icon for normal state ( ex: AUTOPILOT)
+            robot_state=':ballot_box_with_check:'
+            state_request,list_state=self.getRequestURL()
+            if(state_request):
+                
+                #Robot status
+                robot_status=list_state['state']
+                # Test the Status if it FAILED or EMERGENCY the msg of th robot state is failed and the color is red 
+                if list_state['state'].lower() == 'failure' or list_state['state'].lower() == 'emergency':
+                        robot_state='⚠️'
+                        color_msg=0xF04747
+               
+                if(startTime and endTime and startDate and endDate):
+                        #Prepare notification content to send with Webhook
+                        notification_msg=calendar+' : Start Event '+'**'+startDate+'**'+' Time '+'**'+startTime+'**'+'\n'+'\n'+calendar+' : End Event '+'**'+endDate+'**'+' Time '+'**'+endTime+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
+                
+                else:
+                        notification_msg=calendar+' ** Date :** '+'**'+dateNow+'**'+' **Time ** '+'**'+timeNow+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
+
+        except Exception as err:
+            print(f'Other error occurred: {err}')  # Python 3.6
+        return notification_msg,color_msg 
+
+
     def postWebhook(self):
       
-        body_msg,color_msg=self.stateMessage()
+        body_msg,color_msg=self.msgWebhook()
         if body_msg:
             #Prepare notification content to send with Webhook                
             notification = Embed(description=body_msg,color=color_msg)       
             #Send the Notification to Discord
             self.discord_channel.send(embed=notification)
-            print('Success Connection To Rest Server!')
+            
+            print("Webhook sent !")
+
         else:
             print("Nothing to send !")
 
@@ -241,10 +295,5 @@ class notificationHook:
 
 
 
-if __name__ == "__main__":    
-    notif= notificationHook()
-    schedule.every(10).seconds.do(notif.postWebhook)
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+
 
