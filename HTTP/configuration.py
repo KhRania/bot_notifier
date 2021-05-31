@@ -13,5 +13,5 @@ config={ "Settings": {
 urls={
     "stateurl":"http://127.0.0.1:40054/state",
     "webhookurl":"https://discord.com/api/webhooks/840274499710615602/v04Tylo1M3Y7l7yNELisaAX7QeRL1HHLp2lumLW9PxhCFsDSbPQEHBR87-nhWRQYdQUb",
-    "token":"ODQ1MzE0ODUxNTkyMDc3MzEy.YKfKzQ.cYJemL9P-fy6ydju1TKOrF-2oes"
+   
 }
