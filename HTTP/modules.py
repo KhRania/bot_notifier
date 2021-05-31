@@ -234,6 +234,41 @@ class Notification:
         return notification_msg,color_msg         
     
 
+    def stateMessage(self):
+        #normal color msg blue
+        color_msg=0x5CDBF0
+        state_msg=''
+        try:
+           
+            #icon calendar to be added in the notification to send
+            calendar=':calendar_spiral:'
+            dateNow,timeNow=self.getNow()
+            startTime,endTime=self.getEventTime()
+            startDate,endDate=self.getEventDate()
+            #State icon for normal state ( ex: AUTOPILOT)
+            robot_state=':ballot_box_with_check:'
+            state_request,list_state=self.getRequestURL()
+            if(state_request):
+                
+                #Robot status
+                robot_status=list_state['state']
+                # Test the Status if it FAILED or EMERGENCY the msg of th robot state is failed and the color is red 
+                if list_state['state'].lower() == 'failure' or list_state['state'].lower() == 'emergency':
+                        robot_state='⚠️'
+                        color_msg=0xF04747
+               
+                if(startTime and endTime and startDate and endDate):
+                        #Prepare notification content to send with Webhook
+                        state_msg=calendar+' : Start Event '+'**'+startDate+'**'+' Time '+'**'+startTime+'**'+'\n'+'\n'+calendar+' : End Event '+'**'+endDate+'**'+' Time '+'**'+endTime+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'
+                
+                else:
+                        state_msg=calendar+' ** Date :** '+'**'+dateNow+'**'+' **Time ** '+'**'+timeNow+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'
+
+        except Exception as err:
+            print(f'Other error occurred: {err}')  # Python 3.6
+        return state_msg,color_msg 
+
+
     def msgNotify(self):
         #normal color msg blue
         color_msg=0x5CDBF0
@@ -290,10 +325,3 @@ class Notification:
 
         else:
             print("Nothing to send !")
-
-    
-
-
-
-
-
