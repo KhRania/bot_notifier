@@ -32,20 +32,26 @@ async def on_message(message):
   free_disk_msg,color_free_disk_msg=notif.storageMessage()
   temperature_msg,color_temperature_msg=notif.temperatureMessage()
   humidity_msg,color_humidity_msg=notif.humidityMessage()
+  state_msg,color_msg=notif.stateMessage()
 
   notify_notif='!notify'
-  battery_notif='!battery'
-  hum_notif='!humidity'
-  temp_notif='!temperature'
-  storage_notif='!storage'
-
+  battery_notif='!notify battery'
+  hum_notif='!notify humidity'
+  temp_notif='!notify temperature'
+  storage_notif='!notify storage'
+  state_notif="!notify state"
   # we do not want the bot to reply to itself
   if message.author == client.user:
     print('Bot sends a msg')
   else:
-    print('User send a msg')  
-  if message.content.lower()==notify_notif or message.content.lower()==battery_notif  or message.content.lower()==hum_notif or message.content.lower()==temp_notif or message.content.lower()== storage_notif :
+    print('User sends a msg')  
+  if message.content.lower()==state_notif or message.content.lower()==notify_notif or message.content.lower()==battery_notif  or message.content.lower()==hum_notif or message.content.lower()==temp_notif or message.content.lower()== storage_notif :
  
+    if state_msg and message.content.lower()==state_notif :
+        embedVar = discord.Embed(description=state_msg ,color=color_msg)   
+        await message.channel.send(embed=embedVar)
+
+
     if notification_msg and message.content.lower()==notify_notif :
         embedVar = discord.Embed(description=notification_msg ,color=color_msg)   
         await message.channel.send(embed=embedVar)
@@ -86,5 +92,3 @@ async def on_member_join(member):
 
 keep_alive()
 client.run(cfg.urls["token"])
-
-    
