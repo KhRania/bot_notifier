@@ -5,8 +5,8 @@ import time
 
 
 notif= Notification()
-schedule.every(30).seconds.do(notif.postWebhook)
-    
+schedule.every(5).seconds.do(notif.postWebhook)
+
 while True:
     try:
         schedule.run_pending()
