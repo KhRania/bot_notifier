@@ -32,7 +32,7 @@ async def on_message(message):
   free_disk_msg,color_free_disk_msg=notif.storageMessage()
   temperature_msg,color_temperature_msg=notif.temperatureMessage()
   humidity_msg,color_humidity_msg=notif.humidityMessage()
-  state_msg,color_msg=notif.stateMessage()
+  state_msg,color_state_msg=notif.stateMessage()
 
   notify_notif='!notify'
   battery_notif='!notify battery'
@@ -48,7 +48,7 @@ async def on_message(message):
   if message.content.lower()==state_notif or message.content.lower()==notify_notif or message.content.lower()==battery_notif  or message.content.lower()==hum_notif or message.content.lower()==temp_notif or message.content.lower()== storage_notif :
  
     if state_msg and message.content.lower()==state_notif :
-        embedVar = discord.Embed(description=state_msg ,color=color_msg)   
+        embedVar = discord.Embed(description=state_msg ,color=color_state_msg)   
         await message.channel.send(embed=embedVar)
 
 
