@@ -20,7 +20,7 @@ class Notification:
     #urls contains the url of state from REST Server
     state_url=cfg.urls["stateurl"]
     #urls contains the url of state from REST Server
-    screenshot_url=cfg.urls["screenshoturl"]
+    screenshot_url=cfg.urls["takescreenshot"]
 
 
 
@@ -316,37 +316,19 @@ class Notification:
         return notification_msg,color_msg 
 
 
-    def postWebhook(self):
-      
-        body_msg,color_msg=self.msgWebhook()
-        screenshot_request,list_screenshot=self.screenshot() 
-        screenshot=list_screenshot[-3] 
-        file = File('/home/rania/Pictures/Docking_Capture.png', name='quad2.png') 
-       
-       
-        if body_msg:
-            #Prepare notification content to send with Webhook                
-            notification = Embed(description=body_msg,color=color_msg)
-            #notification.set_image(screenshot)
-       
-            #Send the Notification to Discord
-            self.discord_channel.send(embed=notification)
-            self.discord_channel.send('Look at this:', file=file)
-            print("Webhook sent !")
-
-        else:
-            print("Nothing to send !")
+  
 
     def screenshot(self):
-        list_screenshot='{}'
+    
 
         #The result of this test will be stored in scheduleRequest & state_request to do the treatment afterwards
-        screenshot_request=False
+        #screenshot_request=False
         
         #Test if the connection to /state is available
         if self.screenshot_url :
             try:
                 response = requests.get(self.screenshot_url)
+                #print (response.headers['content-type'])
 
                 # If the response was successful, no Exception will be raised
                 response.raise_for_status()
@@ -355,9 +337,5 @@ class Notification:
             except Exception as err:
                 print(f'Other error occurred: {err}')  # Python 3.6
             #No Exception raised => Connection to the Rest Server with success    
-            else:
-                
-                screenshot_request=True
-                # extracting state data in json format
-                list_screenshot=requests.get(self.screenshot_url).json()
-        return screenshot_request,list_screenshot
+            
+        return response

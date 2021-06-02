@@ -53,6 +53,7 @@ async def on_message(message):
 
 
     if notification_msg and message.content.lower()==notify_notif :
+      
         embedVar = discord.Embed(description=notification_msg ,color=color_msg)   
         await message.channel.send(embed=embedVar)
 
