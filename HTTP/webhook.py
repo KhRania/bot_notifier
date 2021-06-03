@@ -9,8 +9,8 @@ from io import BytesIO,StringIO
 from PIL import Image
 
 discord_channel=Webhook(cfg.urls["webhookurl"])
+screenshot_url=cfg.urls["takescreenshot"]
 notif= Notification()
-
 
 def postWebhook():
       
@@ -22,24 +22,24 @@ def postWebhook():
         if body_msg:
             #Prepare notification content to send with Webhook                
             notification = Embed(description=body_msg,color=color_msg)
-            notification2 = Embed(description="image")
-            #response = requests.get(screenshot_url)
-            notification2.set_image(url=screenshot_url)
-            #file = File(BytesIO(response.content), name='wow.png')
+            response = requests.get(screenshot_url)
+            screenshot = File(BytesIO(response.content), name='quad.png')
             #Send the Notification to Discord
+           
             discord_channel.send(embed=notification)
-            discord_channel.send(embed=notification2)
-            #discord_channel.send(file=file)
+            discord_channel.send(file=screenshot)
             print("Webhook sent !")
-
+            discord_channel.close()
+            screenshot.close()
+            
         else:
             print("Nothing to send !")
-
+       
 schedule.every(30).seconds.do(postWebhook)
     
 while True:
     try:
-        screenshot_url="http://151.253.224.74:3008/axis-cgi/jpg/image.cgi?&compression=25&camera=quad"
+      
         schedule.run_pending()
         time.sleep(1)
     except Exception as err:

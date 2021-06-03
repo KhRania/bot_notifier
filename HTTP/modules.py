@@ -24,6 +24,7 @@ class Notification:
 
 
 
+
     def getRequestURL(self):
         list_state='{}'
         #The result of this test will be stored in scheduleRequest & state_request to do the treatment afterwards

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import discord
+from discord.ext import commands
+from discord.ext.commands import bot 
 import configuration as cfg
 import requests
 from requests.exceptions import HTTPError
@@ -11,9 +13,9 @@ from keep_alive import keep_alive
 from modules import Notification
 
 
-
+bot = commands.Bot(command_prefix="!")
 client = discord.Client()
-
+screenshot_url=cfg.urls["takescreenshot"]
 #register an event 
 #discrod.py is an async library to manage thinks it will be by callbacks 
 #this func will be called when the bot it will be used
@@ -35,11 +37,15 @@ async def on_message(message):
   state_msg,color_state_msg=notif.stateMessage()
 
   notify_notif='!notify'
+  screenshot_notif='!notify screenshot'
   battery_notif='!notify battery'
   hum_notif='!notify humidity'
   temp_notif='!notify temperature'
   storage_notif='!notify storage'
   state_notif="!notify state"
+
+
+  channel=client.get_channel(804657187611344942)
   # we do not want the bot to reply to itself
   if message.author == client.user:
     print('Bot sends a msg')
@@ -53,10 +59,13 @@ async def on_message(message):
 
 
     if notification_msg and message.content.lower()==notify_notif :
-      
-        embedVar = discord.Embed(description=notification_msg ,color=color_msg)   
+        
+        embedVar = discord.Embed(description=notification_msg ,color=color_msg)
+        screen = discord.Embed(title="screen")
+        screen.set_thumbnail(url=screenshot_url)
+        #embedVar.set_image(url=screenshot_url)
         await message.channel.send(embed=embedVar)
-
+        await channel.send(embed=screen)
     elif battery_msg and message.content.lower()==battery_notif:
         embedVar = discord.Embed(description=battery_msg ,color=color_battery_msg)   
         await message.channel.send(embed=embedVar)
@@ -77,17 +86,12 @@ async def on_message(message):
       await message.channel.send(embed=embedVar)
       
     
+@bot.command(pass_context=True)
+async def notify(ctx):
+  await bot.say("http://151.253.224.74:3008/axis-cgi/jpg/image.cgi?&compression=25&camera=quad")
 
 
 
-#new member join the server    
-@client.event
-async def on_member_join(member):
-        guild = member.guild
-        if guild.system_channel is not None:
-            to_send = f'Welcome {member.mention} to {guild.name}!'
-            await guild.system_channel.send(to_send)
-            print("hi !")
 
 
 
