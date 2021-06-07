@@ -17,15 +17,16 @@ class Notification:
     robot_status_list=[]
     #WebHokk URL Provided By Discord (this url serve to communicate with Discord App)
     discord_channel=Webhook(cfg.urls["webhookurl"])
-    #urls contains the url of state from REST Server
+    #state_url contains the url of state from REST Server
     state_url=cfg.urls["stateurl"]
-    #urls contains the url of state from REST Server
+    #screenshot_url contains the url of axis screen shot
     screenshot_url=cfg.urls["takescreenshot"]
+    #settings_url contains the url of state from REST Server
+    settings_url=cfg.urls["settingsurl"]
 
 
-
-
-    def getRequestURL(self):
+    #Get /state response and convert it to json
+    def getResponseState(self):
         list_state='{}'
         #The result of this test will be stored in scheduleRequest & state_request to do the treatment afterwards
         state_request=False
@@ -48,13 +49,44 @@ class Notification:
                 # extracting state data in json format
                 list_state=requests.get(self.state_url).json()
         return state_request,list_state
+    
+    #Get /settings response and convert it to json
+    def getResponseSettings(self):
+        list_settings='{}'
+        #The result of this test will be stored in scheduleRequest & state_request to do the treatment afterwards
+        settings_request=False
+        
+        #Test if the connection to /state is available
+        if self.settings_url :
+            try:
+                response = requests.get(self.settings_url)
 
+                # If the response was successful, no Exception will be raised
+                response.raise_for_status()
+            except HTTPError as http_err:
+                print(f'HTTP error occurred: {http_err}')  # Python 3.6
+            except Exception as err:
+                print(f'Other error occurred: {err}')  # Python 3.6
+            #No Exception raised => Connection to the Rest Server with success    
+            else:
+                
+                settings_request=True
+                # extracting state data in json format
+                list_settings=requests.get(self.settings_url).json()
+                
+
+        return settings_request,list_settings
+
+
+    #battery notification
     def batteryMessage(self):
         battery_msg=''
         #normal color msg blue
         color_msg=0x5CDBF0
-        state_request,list_state=self.getRequestURL()
-        if(state_request):
+        #get responses from /state and /settings
+        state_request,list_state=self.getResponseState()
+        settings_request,list_settings=self.getResponseSettings()
+        if(state_request and settings_request):
             # battery percentage
             battery_percentage=round(float(list_state['battery']['percentage']*100),1)
             #icon if value normal
@@ -63,19 +95,22 @@ class Notification:
             battery_msg=battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '
          
             # Warning case if battery value < 0.2 msg for battery status switch to warning
-            if list_state['battery']['percentage']< cfg.config['Settings']['battery']:
+            if list_state['battery']['percentage']< list_settings['settings'][0]['battery']:
                 battery_state='⚠️'
                 color_msg=0xFF8800
-                battery_msg=battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+'below  '+str(round(cfg.config['Settings']['battery']*100))+'%'
+                battery_msg=battery_state+' : Battery state :battery: '+str(battery_percentage)+'% '+'below  '+str(round(list_settings['settings'][0]['battery']*100))+'%'
         
         return battery_msg,color_msg
     
+    #storage notification
     def storageMessage(self):
         free_disk_msg=''
         #normal color msg blue
         color_msg=0x5CDBF0
-        state_request,list_state=self.getRequestURL()
-        if(state_request):
+        #get responses from /state and /settings
+        state_request,list_state=self.getResponseState()
+        settings_request,list_settings=self.getResponseSettings()
+        if(state_request and settings_request):
             #icon if value normal
             free_disk_percentage_state=':ballot_box_with_check:'
             #Free Disk Storage percentage
@@ -83,18 +118,21 @@ class Notification:
             #free_disk Message send with the notification is empty when free_disk_percentage is normal
             free_disk_msg=free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '
             # Warning case if free_disk_percentage < 20 % msg for battery status switch to warning
-            if free_disk_percentage < round(cfg.config['Settings']['disk']*100,1):
+            if free_disk_percentage < round(list_settings['settings'][0]['disk']*100,1):
                 free_disk_percentage_state='⚠️'
                 color_msg=0xFF8800
-                free_disk_msg=free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+'below '+str(round(cfg.config['Settings']['disk']*100))+'%'
+                free_disk_msg=free_disk_percentage_state+' : Free storage :cd: '+str(free_disk_percentage)+'% '+'below '+str(round(list_settings['settings'][0]['disk']*100))+'%'
         return free_disk_msg,color_msg
 
+    #temperature notification
     def temperatureMessage(self):
         temperature_msg=''
         #normal color msg blue
         color_msg=0x5CDBF0
-        state_request,list_state=self.getRequestURL()
-        if(state_request):
+        #get responses from /state and /settings
+        state_request,list_state=self.getResponseState()
+        settings_request,list_settings=self.getResponseSettings()
+        if(state_request and settings_request):
             #icon if value normal
             temperature_state=':ballot_box_with_check:'
             #Temperature Value
@@ -102,24 +140,26 @@ class Notification:
             #Temperature Message send with the notification is empty when temperature_value is normal
             temperature_msg=temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C '
              #Warning Temperature 
-            if temperature_value <= cfg.config['Settings']['temperature']['min']:
+            if temperature_value <= list_settings['settings'][0]['temperature']['min']:
                 temperature_state='⚠️'
                 color_msg=0xFF8800
-                temperature_msg=temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C below '+str(int(cfg.config['Settings']['temperature']['min']))+'°C'
-            elif temperature_value >= cfg.config['Settings']['temperature']['max']:
+                temperature_msg=temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C below '+str(int(list_settings['settings'][0]['temperature']['min']))+'°C'
+            elif temperature_value >= list_settings['settings'][0]['temperature']['max']:
                 temperature_state='⚠️'
                 color_msg=0xFF8800
-                temperature_msg=temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C above '+str(int(cfg.config['Settings']['temperature']['max']))+'°C'
+                temperature_msg=temperature_state+' : Temperature :thermometer: '+str(temperature_value)+'°C above '+str(int(list_settings['settings'][0]['temperature']['max']))+'°C'
         
         return temperature_msg,color_msg
 
-
+    #humidity notification
     def humidityMessage(self):
         humidity_msg=''
         #normal color msg blue
         color_msg=0x5CDBF0
-        state_request,list_state=self.getRequestURL()
-        if(state_request):
+        #get responses from /state and /settings
+        state_request,list_state=self.getResponseState()
+        settings_request,list_settings=self.getResponseSettings()
+        if(state_request and settings_request):
             #icon if value normal
             humidity_state=':ballot_box_with_check:'
             #humidity Value
@@ -127,14 +167,14 @@ class Notification:
             #humidity Message send with the notification is empty when humidity_value is normal
             humidity_msg=humidity_state+' : Humidity :droplet: '+str(humidity_value)+'% '
             #Warning Humidity
-            if humidity_value <= cfg.config['Settings']['humidity']['min']:
+            if humidity_value <= list_settings['settings'][0]['humidity']['min']:
                 humidity_state='⚠️'
                 color_msg=0xFF8800
-                humidity_msg=humidity_state+' : Humidity :droplet: '+str(humidity_value)+'%'+' below '+str(int(cfg.config['Settings']['humidity']['min']))+'%'
-            elif humidity_value >= cfg.config['Settings']['humidity']['max']:
+                humidity_msg=humidity_state+' : Humidity :droplet: '+str(humidity_value)+'%'+' below '+str(int(list_settings['settings'][0]['humidity']['min']))+'%'
+            elif humidity_value >= list_settings['settings'][0]['humidity']['max']:
                 humidity_state='⚠️'
                 color_msg=0xFF8800
-                humidity_msg=humidity_state+' : Humidity :droplet: '+str(humidity_value)+'%'+' above '+str(int(cfg.config['Settings']['humidity']['max']))+'%'
+                humidity_msg=humidity_state+' : Humidity :droplet: '+str(humidity_value)+'%'+' above '+str(int(list_settings['settings'][0]['humidity']['max']))+'%'
         return humidity_msg,color_msg
 
     #Get the date and time from local to check with event in get request of schedule
@@ -149,7 +189,7 @@ class Notification:
 
         start_time_event_local = ''
         end_time_event_local = ''
-        state_request,list_state=self.getRequestURL()
+        state_request,list_state=self.getResponseState()
         if(state_request):
             if(len(list_state['current_events'])==1):
 
@@ -176,7 +216,7 @@ class Notification:
         start_date_event_local  = ''
         end_date_event_local    = ''
 
-        state_request,list_state=self.getRequestURL()
+        state_request,list_state=self.getResponseState()
         if(state_request):
             if(len(list_state['current_events'])==1):
                 start_date_event_local  = list_state['current_events'][0]['start'][:11]
@@ -198,8 +238,10 @@ class Notification:
             humidity_msg,colorH=self.humidityMessage()
             color_warning=0xFF8800
             #list color to choose the color of the notification to send
-            for color_warning in [colorB,colorS,colorT,colorH]:
-                color_msg= color_warning
+            for color in [colorB,colorS,colorT,colorH]:
+                if color == color_warning:
+                    color_msg= color_warning
+                    break
             #icon calendar to be added in the notification to send
             calendar=':calendar_spiral:'
             dateNow,timeNow=self.getNow()
@@ -207,7 +249,7 @@ class Notification:
             startDate,endDate=self.getEventDate()
             #State icon for normal state ( ex: AUTOPILOT)
             robot_state=':ballot_box_with_check:'
-            state_request,list_state=self.getRequestURL()
+            state_request,list_state=self.getResponseState()
             if(state_request):
                 print('Success Connection To Rest Server!')
                 #Robot status
@@ -252,7 +294,7 @@ class Notification:
             startDate,endDate=self.getEventDate()
             #State icon for normal state ( ex: AUTOPILOT)
             robot_state=':ballot_box_with_check:'
-            state_request,list_state=self.getRequestURL()
+            state_request,list_state=self.getResponseState()
             if(state_request):
                 
                 #Robot status
@@ -295,7 +337,7 @@ class Notification:
             startDate,endDate=self.getEventDate()
             #State icon for normal state ( ex: AUTOPILOT)
             robot_state=':ballot_box_with_check:'
-            state_request,list_state=self.getRequestURL()
+            state_request,list_state=self.getResponseState()
             if(state_request):
                 
                 #Robot status
@@ -329,8 +371,6 @@ class Notification:
         if self.screenshot_url :
             try:
                 response = requests.get(self.screenshot_url)
-                #print (response.headers['content-type'])
-
                 # If the response was successful, no Exception will be raised
                 response.raise_for_status()
             except HTTPError as http_err:

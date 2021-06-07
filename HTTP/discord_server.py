@@ -2,7 +2,6 @@
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import bot 
 import configuration as cfg
 import requests
 from requests.exceptions import HTTPError
@@ -11,21 +10,33 @@ import time
 import datetime
 from keep_alive import keep_alive
 from modules import Notification
+from selenium import webdriver
 
 
-bot = commands.Bot(command_prefix="!")
-client = discord.Client()
+bot = commands.Bot(command_prefix='!', description="This is a Helper Bot")
 screenshot_url=cfg.urls["takescreenshot"]
+
+#launch URL
+#driver.get(screenshot_url)
+#refresh page
+#driver.refresh()
+#bot = discord.Client()
 #register an event 
 #discrod.py is an async library to manage thinks it will be by callbacks 
 #this func will be called when the bot it will be used
-@client.event
+@bot.event
 async def on_ready():
-  print('We have logged in Discord Server as {0.user}'.format(client))
+  print('We have logged in Discord Server as '+ str(bot.user))
+
+@bot.command()
+async def ping(ctx):
+  #channel= bot.get_channel(804657187611344942)
+  await ctx.send('hello !!!')
+
 
 
 #when  receive message
-@client.event
+@bot.event
 async def on_message(message):
 
   notif= Notification()
@@ -45,9 +56,9 @@ async def on_message(message):
   state_notif="!notify state"
 
 
-  channel=client.get_channel(804657187611344942)
+ 
   # we do not want the bot to reply to itself
-  if message.author == client.user:
+  if message.author == bot.user:
     print('Bot sends a msg')
   else:
     print('User sends a msg')  
@@ -59,13 +70,12 @@ async def on_message(message):
 
 
     if notification_msg and message.content.lower()==notify_notif :
-        
         embedVar = discord.Embed(description=notification_msg ,color=color_msg)
-        screen = discord.Embed(title="screen")
-        screen.set_thumbnail(url=screenshot_url)
-        #embedVar.set_image(url=screenshot_url)
+        embedVar.set_image(url=screenshot_url)
+       
+           
         await message.channel.send(embed=embedVar)
-        await channel.send(embed=screen)
+      
     elif battery_msg and message.content.lower()==battery_notif:
         embedVar = discord.Embed(description=battery_msg ,color=color_battery_msg)   
         await message.channel.send(embed=embedVar)
@@ -86,14 +96,12 @@ async def on_message(message):
       await message.channel.send(embed=embedVar)
       
     
-@bot.command(pass_context=True)
-async def notify(ctx):
-  await bot.say("http://151.253.224.74:3008/axis-cgi/jpg/image.cgi?&compression=25&camera=quad")
-
 
 
 
 
 
 keep_alive()
-client.run(cfg.urls["token"])
+bot.run(cfg.urls["token"])
+#bot.run(cfg.urls["token"])
+

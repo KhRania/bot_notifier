@@ -2,7 +2,7 @@
 structure:
         class Notification:
             #fonction pour faire check sur /state et envoyer son contenu
-            def getRequestURL(self):
+            def getResponseState(self):
             #fonction pour envoyer un message de batterie
             def batteryMessage(self):
             #fonction pour envoyer un message de disque
