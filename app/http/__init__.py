@@ -1,2 +1,2 @@
 #import configuration as cfg
-from http import *
+from http import modules
