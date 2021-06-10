@@ -1,0 +1,34 @@
+jl
+jeanluc
+enedis
+manorga
+etisalat
+bonsoir
+log
+bonjour
+rouaa
+moi
+dock
+robot
+bot
+docking
+docked
+autopilot
+failure
+time out 
+notify
+notify screenshot
+notify battery
+notify humidity
+notify temperature
+notify storage
+notify state
+notify help
+rules
+hello
+add
+ping
+rania
+tayssir
+jeanlucmc
+rouaa
