@@ -57,11 +57,10 @@ async def on_message(message):
   state_notif="!notify state"
   help_notif='!notify help'
   rules_notif='!rules'
-  
 
   embedVar =''
-
-  list_messages=[notify_notif,screenshot_notif,hum_notif,temp_notif,storage_notif,state_notif,embedVar,help_notif,rules_notif]
+  words=[]
+  special_chars=["$", "!", "?", "-", "*", "`", "~", "+", "/", ";", "=", "&", ">"]
   # we do not want the bot to reply to itself
   if message.author == bot.user:
     print('Bot sends a msg')
@@ -106,15 +105,24 @@ async def on_message(message):
       await message.channel.send(embed=embedVar)
   #speech file contain words that they are allow to be sent in discord server
   with open("speech.txt") as f:
-      words=[]
       for lines in f:
-        words.append(lines.strip("\n"))
-      
-      if message.content.lower() in words or message.content == embedVar or message.content.startswith(("$", "!","@","<")) :
-        pass
-      else:
-        await message.delete() 
-              
+            words.append(lines.strip("\n"))
+  char_found=False
+  for char in words :
+    if char in message.content:
+      print(char)
+      char_found=True
+  
+  print(char_found)
+  if char_found==False or message.content == embedVar or (message.content.startswith(("$", "!", "?", "-", "*", "`", "~", "+", "/", ";", "=", "&", ">")) and len(message.content)>=3): 
+    pass  
+  else:  
+    try:
+      #print(message.content)
+      await message.delete() 
+    except Exception as err:
+      print(f'Other error occurred: {err}')  # Python 3.6
+                  
 
              
 
