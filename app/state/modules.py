@@ -19,8 +19,7 @@ class Notification:
     discord_channel=Webhook(cfg.urls["webhookurl"])
     #state_url contains the url of state from REST Server
     state_url=cfg.urls["stateurl"]
-    #screenshot_url contains the url of axis screen shot
-    screenshot_url=cfg.urls["takescreenshot"]
+    
     #settings_url contains the url of state from REST Server
     settings_url=cfg.urls["settingsurl"]
 
@@ -361,22 +360,4 @@ class Notification:
 
   
 
-    def screenshot(self):
-    
-
-        #The result of this test will be stored in scheduleRequest & state_request to do the treatment afterwards
-        #screenshot_request=False
-        
-        #Test if the connection to /state is available
-        if self.screenshot_url :
-            try:
-                response = requests.get(self.screenshot_url)
-                # If the response was successful, no Exception will be raised
-                response.raise_for_status()
-            except HTTPError as http_err:
-                print(f'HTTP error occurred: {http_err}')  # Python 3.6
-            except Exception as err:
-                print(f'Other error occurred: {err}')  # Python 3.6
-            #No Exception raised => Connection to the Rest Server with success    
-            
-        return response
+  

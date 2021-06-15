@@ -8,7 +8,7 @@ import requests
 from io import BytesIO,StringIO
 
 discord_channel=Webhook(cfg.urls["webhookurl"])
-screenshot_url=cfg.urls["takescreenshot"]
+screenshot_url=cfg.urls["quad1"]
 notif= Notification()
 
 def postWebhook():
@@ -16,13 +16,13 @@ def postWebhook():
         body_msg,color_msg=notif.msgWebhook()
         
        
-        resp = notif.screenshot()
+       
         #print(resp)
         if body_msg:
             #Prepare notification content to send with Webhook                
             notification = Embed(description=body_msg,color=color_msg)
             response = requests.get(screenshot_url)
-            screenshot = File(BytesIO(response.content), name='quad.png')
+            screenshot = File(BytesIO(response.content), name='quad1.png')
             #Send the Notification to Discord
            
             discord_channel.send(embed=notification)
