@@ -41,11 +41,7 @@ async def on_message(message):
   except Exception as err:
         print(f'Other error occurred: {err}')  
 
-#   c_channel = discord.utils.get(message.guild.text_channels, name='development-and-test')
-#   msg_list.append(c_channel.last_message.embeds)
-#   msg_list.append(c_channel.last_message.content)
-#   print(msg_list)  
-#   print(embeds)
+
   if message.author != client.user: #IF 1
     if  message.content.lower()==notify_msg: 
     
@@ -55,12 +51,7 @@ async def on_message(message):
       
       
   else:
-    if last_msg==True:
-
-        last_msg=False   
-        
-    else:
-       
+    if last_msg==False:
         print(" robot dispo ")
     sender_list=sender_list[1:]
     return
@@ -69,8 +60,9 @@ async def on_message(message):
 
             if sender_list[-1]=='user' and sender_list[0]=='user':
 
-                if len(sender_list)==1:
-                  
+                if  last_msg==True   :
+                    sender_list=sender_list[1:]
+                    last_msg=False
                     pass
 
                 else:
@@ -86,4 +78,4 @@ async def on_message(message):
 
     
 keep_alive()
-client.run("ODQ1MzE0ODUxNTkyMDc3MzEy.YKfKzQ.fUNMmVBzZlLrNPtDQtS8ikugd6M")
+#client.run("ODQ1MzE0ODUxNTkyMDc3MzEy.YKfKzQ.7YnhYLEee9QZeE-kZVV9PVfpNZI")

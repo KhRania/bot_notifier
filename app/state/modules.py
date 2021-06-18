@@ -8,7 +8,9 @@ import datetime
 import time
 from dateutil import tz
 import configuration as cfg
+import logging
 
+logging.basicConfig(level=logging.INFO)
 
 
 class Notification:
@@ -38,9 +40,9 @@ class Notification:
                 # If the response was successful, no Exception will be raised
                 response.raise_for_status()
             except HTTPError as http_err:
-                print(f'HTTP error occurred: {http_err}')  # Python 3.6
+                logging.error(f'HTTP error occurred: {http_err}')  # Python 3.6
             except Exception as err:
-                print(f'Other error occurred: {err}')  # Python 3.6
+                logging.error(f'Other error occurred: {err}')  # Python 3.6
             #No Exception raised => Connection to the Rest Server with success    
             else:
                 
@@ -63,9 +65,9 @@ class Notification:
                 # If the response was successful, no Exception will be raised
                 response.raise_for_status()
             except HTTPError as http_err:
-                print(f'HTTP error occurred: {http_err}')  # Python 3.6
+                logging.error(f'HTTP error occurred: {http_err}')  # Python 3.6
             except Exception as err:
-                print(f'Other error occurred: {err}')  # Python 3.6
+                logging.error(f'Other error occurred: {err}')  # Python 3.6
             #No Exception raised => Connection to the Rest Server with success    
             else:
                 
@@ -250,7 +252,7 @@ class Notification:
             robot_state=':ballot_box_with_check:'
             state_request,list_state=self.getResponseState()
             if(state_request):
-                print('Success Connection To Rest Server!')
+                logging.info('Success Connection To Rest Server!')
                 #Robot status
                 robot_status=list_state['state']
                 self.robot_status_list.append(robot_status)
@@ -276,7 +278,7 @@ class Notification:
                 #to get only the last 2 elements of robot_status_list to avoid having an array with unlimited content
                 self.robot_status_list=self.robot_status_list[-2:]
         except Exception as err:
-            print(f'Other error occurred: {err}')  # Python 3.6
+            logging.error(f'Other error occurred: {err}')  # Python 3.6
         return notification_msg,color_msg         
     
 
@@ -311,7 +313,7 @@ class Notification:
                         state_msg=calendar+' ** Date :** '+'**'+dateNow+'**'+' **Time ** '+'**'+timeNow+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'
 
         except Exception as err:
-            print(f'Other error occurred: {err}')  # Python 3.6
+            logging.error(f'Other error occurred: {err}')  # Python 3.6
         return state_msg,color_msg 
 
 
@@ -354,7 +356,7 @@ class Notification:
                         notification_msg=calendar+' ** Date :** '+'**'+dateNow+'**'+' **Time ** '+'**'+timeNow+'**'+'\n'+'\n'+robot_state+' : Robot state '+'**'+robot_status+'**'+'\n'+'\n'+battery_msg+'\n'+'\n'+free_disk_msg+'\n'+'\n'+temperature_msg+'\n'+'\n'+humidity_msg
 
         except Exception as err:
-            print(f'Other error occurred: {err}')  # Python 3.6
+            logging.error(f'Other error occurred: {err}')  # Python 3.6
         return notification_msg,color_msg 
 
 

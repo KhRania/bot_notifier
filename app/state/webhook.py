@@ -6,7 +6,9 @@ from dhooks import Webhook, Embed, File
 import configuration as cfg
 import requests
 from io import BytesIO,StringIO
+import logging
 
+logging.basicConfig(level=logging.INFO)
 discord_channel=Webhook(cfg.urls["webhookurl"])
 screenshot_url=cfg.urls["quad1"]
 notif= Notification()
@@ -27,12 +29,12 @@ def postWebhook():
            
             discord_channel.send(embed=notification)
             discord_channel.send(file=screenshot)
-            print("Webhook sent !")
+            logging.info("Webhook sent !")
             discord_channel.close()
             screenshot.close()
             
         else:
-            print("Nothing to send !")
+            logging.info("Nothing to send !")
        
 schedule.every(30).seconds.do(postWebhook)
     
@@ -42,4 +44,4 @@ while True:
         schedule.run_pending()
         time.sleep(1)
     except Exception as err:
-        print(f'Other error occurred: {err}')  # Python 3.6
+        logging.error(f'Other error occurred: {err}')  # Python 3.6

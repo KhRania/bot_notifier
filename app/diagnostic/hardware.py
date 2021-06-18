@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from http import modules
-
-notif= modules.Notification()
+import os,sys
+from ..state import modules
 
 class Anomalies:
 
@@ -14,10 +13,10 @@ class Anomalies:
 
     def startEvent(self):
 
-        start_date_event,end_date_event=notif.getEventDate()
+        start_date_event,end_date_event=modules.Notification.getEventDate()
         #if(start_date_event):
         print(start_date_event)
-        print(notif.robot_status_list)
+        print(modules.Notification.robot_status_list)
 
 
 
