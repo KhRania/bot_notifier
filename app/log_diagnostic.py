@@ -23,6 +23,7 @@ notif= Notification()
 
 robot_status_list=[]
 docked_state_list=[]
+autopilot_state_list=[]
 dateEvent=[]
 
 
@@ -82,37 +83,77 @@ def baseLog():
     #get responses from /state 
     state_request,list_state=notif.getResponseState()
     robot_status=''
-
+    status=False
     if(state_request):
         #get last status
         robot_status=list_state['state'].lower()
        
         #set docking state as the first element in the array
-        if len(docked_state_list)== 0 :
-            if robot_status== 'docking':
+        if (robot_status== 'docking' or robot_status== 'starting') and list_state['patrol']['active']==False:
+            if len(docked_state_list)== 0 :
+                docked_state_list.append(robot_status)
+            else:
+                docked_state_list=[]
                 docked_state_list.append(robot_status)
         else:
             if robot_status!=docked_state_list[-1]:
-              docked_state_list.append(robot_status)
 
-        #list_state['sensors']['docking']== True
-        if docked_state_list[0]=='docking' and len(docked_state_list)> 0:
+                docked_state_list.append(robot_status)
+            else:
+                status=True
+
+        #Treatement after docking/starting state starting is taken the first element in the array case the robot will reboot and all variables will reset
+        if (docked_state_list[0]=='docking' or docked_state_list[0]=='starting') and len(docked_state_list)> 0:
             print(docked_state_list)
-            print(robot_status_list)
-            if 'manual' in docked_state_list and robot_status!=robot_status_list[-2]:
+            #Manual return to base
+            if docked_state_list[-1]=='manual' and status==False:
 
-                notification = Embed(description='** Problem returning to the charging base. Manual return.**',color=0xF04747)
-                discord_channel.send(embed=notification) 
-            
-            elif 'failure' in docked_state_list:
+                notification = Embed(description='** Problem returning to the charging base. MANUAL RETURN.**',color=0xF04747)
+            #Failure return to base    
+            elif docked_state_list[-1]=='failure' and status==False:
                 notification = Embed(description='** Problem returning to the charging base.**',color=0xF04747)
-                discord_channel.send(embed=notification) 
+             
+            #sur la base    
+            elif docked_state_list[-1]=='docked' and status==False:
+                if list_state['sensors']['docking']== True:
+                    notification = Embed(description='** Success returning to the charging base.**',color=0x5CDBF0)
+                else:
+                    notification = Embed(description='** The robot is not well placed on the charging base**',color=0xF04747)
 
 
-        
-   
+        discord_channel.send(embed=notification)             
 
-        print(docked_state_list)
+#log au cours de l'event
+def eventLog():
+
+    global autopilot_state_list
+    #get responses from /state 
+    state_request,list_state=notif.getResponseState()
+    robot_status=''
+    status=False
+    if(state_request):
+        #get last status
+        robot_status=list_state['state'].lower()
+        #set autopilot state as the first element in the array when the patrol is active and there is a current event
+        if robot_status== 'autopilot' and list_state['patrol']['active']==True and len(list_state['current_events'])==1:
+            if len(docked_state_list)== 0 :
+                docked_state_list.append(robot_status)
+            else:
+                docked_state_list=[]
+                docked_state_list.append(robot_status)
+        else:
+            if robot_status!=docked_state_list[-1]:
+
+                docked_state_list.append(robot_status)
+            else:
+                status=True
+
+
+
+
+
+
+
        
 
 
@@ -124,7 +165,7 @@ def baseLog():
 
 
 
-#schedule.every(30).seconds.do(StartEndEventLog)
+schedule.every(30).seconds.do(StartEndEventLog)
 schedule.every(30).seconds.do(baseLog)
     
 while True:

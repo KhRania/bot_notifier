@@ -4,5 +4,5 @@ urls={
     "webhookurl":"https://discord.com/api/webhooks/840274499710615602/v04Tylo1M3Y7l7yNELisaAX7QeRL1HHLp2lumLW9PxhCFsDSbPQEHBR87-nhWRQYdQUb",
     "quad1":"http://151.253.224.74:3008/axis-cgi/jpg/image.cgi?&compression=25&camera=quad",
     "quad2":"http://151.253.224.74:3004/axis-cgi/jpg/image.cgi?&compression=25&camera=quad",
-    "token":"ODQ1MzE0ODUxNTkyMDc3MzEy.YKfKzQ.kzKVbcSBNCG0QccqsnSWxj1eeOM"
+    "token":"ODQ1MzE0ODUxNTkyMDc3MzEy.YKfKzQ.st_a4JEOPV5n3hL7sMHALZpv7i8"
 }
